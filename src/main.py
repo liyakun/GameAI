@@ -1,5 +1,10 @@
 from src.games import TicTacToe
 
-# run tic tac toe 1000 times, and get statistic results
+# task 1.2.1
 ttt = TicTacToe()
-ttt.run(20)
+ttt.run(1000, 'mar')
+ttt.draw()
+ttt.run(1000, 'map')
+ttt.draw()
+
+
