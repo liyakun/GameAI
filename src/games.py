@@ -45,13 +45,12 @@ class TicTacToe:
             players, others = 0, 0
             for j, item in enumerate(items):
                 piece = S[self.Three_in_a_Row[i][j] / 3][self.Three_in_a_Row[i][j] % 3]
-                if piece == 'p':
+                if piece == p:
                     players += 1
                 elif piece == opponent:
                     others += 1
             t += self.Heuristic_Array[players][others]
         return t
-
 
     def move_still_possible(self, S):
         return not (S[S == 0].size == 0)
