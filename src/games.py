@@ -25,6 +25,33 @@ class TicTacToe:
         self.symbols = {1: 'x', -1: 'o', 0: ' '}
         self.result = []
         self.x_board, self.o_board = np.zeros((3, 3), dtype=int), np.zeros((3, 3), dtype=int)
+        self.Three_in_a_Row = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8],
+                                        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                                        [0, 4, 8], [2, 4, 6]])
+        self.Heuristic_Array = [[0, -10, -100, -1000],
+                                [10, 0, 0, 0],
+                                [100, 0, 0, 0],
+                                [1000, 0, 0, 0]]
+
+    def evaluation(self, S, p):
+        opponent = ' '
+        if p is 'x':
+            opponent = 'o'
+        else:
+            opponent = 'x'
+
+        t = 0
+        for i, items in enumerate(self.Three_in_a_Row):
+            players, others = 0, 0
+            for j, item in enumerate(items):
+                piece = S[self.Three_in_a_Row[i][j] / 3][self.Three_in_a_Row[i][j] % 3]
+                if piece == 'p':
+                    players += 1
+                elif piece == opponent:
+                    others += 1
+            t += self.Heuristic_Array[players][others]
+        return t
+
 
     def move_still_possible(self, S):
         return not (S[S == 0].size == 0)
@@ -73,6 +100,17 @@ class TicTacToe:
         S[px, py] = p
         return S, px, py
 
+    def move_at_heuristic(self, S, p):
+        xs, ys = np.where(S == 0)
+        ts = []
+        for index, item in enumerate(xs):
+            s_copy = S.copy()
+            s_copy[xs[index], ys[index]] = p
+            ts.append(self.evaluation(s_copy, p))
+        index = np.argmax(np.array(ts))
+        S[xs[index], ys[index]] = p
+        return S, xs[index], ys[index]
+
     def execute(self, strategy_x):
         tmp = []
         # initialize 3x3 tic tac toe board
@@ -89,21 +127,18 @@ class TicTacToe:
         while self.move_still_possible(game_state) and noWinnerYet:
             # get player symbol
             name = self.symbols[player]
-            # print '%s moves' % name
 
             x, y = '', ''
             if name == 'x' and strategy_x == 'map':
                 game_state, x, y = self.move_at_probability(game_state, player)
+            elif name == 'x' and strategy_x == 'mah':
+                game_state, x, y = self.move_at_heuristic(game_state, player)
             else:
                 game_state, x, y = self.move_at_random(game_state, player)
-            # print current game state
-            # self.print_game_state(game_state)
 
             # evaluate game state
             if self.move_was_winning_move(game_state, player):
-                # print 'player %s wins after %d moves' % (name, mvcntr)
                 tmp.extend([name, x, y])
-                # print '%s, %s, %s' % (name, x, y)
                 noWinnerYet = False
 
             # switch player and increase move counter
@@ -112,7 +147,6 @@ class TicTacToe:
 
         if noWinnerYet:
             tmp.append('draw')
-            # print 'draw'
         return tmp
 
     def run(self, times, strategy):
