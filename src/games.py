@@ -17,6 +17,7 @@ class Histogram:
             plt.hlines(self.y[i], 0, self.x[i])
         plt.show()
 
+
 class TicTacToe:
     """ tic tac toe implementation"""
 
@@ -24,33 +25,17 @@ class TicTacToe:
         # relate numbers (1, -1, 0) to symbols ('x', 'o', ' ')
         self.symbols = {1: 'x', -1: 'o', 0: ' '}
         self.result = []
+        # x_board and o_board hold the win information after 1000 runs
         self.x_board, self.o_board = np.zeros((3, 3), dtype=int), np.zeros((3, 3), dtype=int)
+        # hold all the three in a line information
         self.Three_in_a_Row = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8],
                                         [0, 3, 6], [1, 4, 7], [2, 5, 8],
                                         [0, 4, 8], [2, 4, 6]])
+        # heuristic array
         self.Heuristic_Array = [[0, -10, -100, -1000],
                                 [10, 0, 0, 0],
                                 [100, 0, 0, 0],
                                 [1000, 0, 0, 0]]
-
-    def evaluation(self, S, p):
-        opponent = ' '
-        if p is 'x':
-            opponent = 'o'
-        else:
-            opponent = 'x'
-
-        t = 0
-        for i, items in enumerate(self.Three_in_a_Row):
-            players, others = 0, 0
-            for j, item in enumerate(items):
-                piece = S[self.Three_in_a_Row[i][j] / 3][self.Three_in_a_Row[i][j] % 3]
-                if piece == p:
-                    players += 1
-                elif piece == opponent:
-                    others += 1
-            t += self.Heuristic_Array[players][others]
-        return t
 
     def move_still_possible(self, S):
         return not (S[S == 0].size == 0)
@@ -99,6 +84,24 @@ class TicTacToe:
         S[px, py] = p
         return S, px, py
 
+    # heuristic function for player x"
+    def evaluation(self, S, p):
+        if p is 'x':
+            opponent = 'o'
+        else:
+            opponent = 'x'
+        t = 0
+        for i, items in enumerate(self.Three_in_a_Row):
+            players, others = 0, 0
+            for j, item in enumerate(items):
+                piece = S[self.Three_in_a_Row[i][j] / 3][self.Three_in_a_Row[i][j] % 3]
+                if piece == p:
+                    players += 1
+                elif piece == opponent:
+                    others += 1
+            t += self.Heuristic_Array[players][others]
+        return t
+
     def move_at_heuristic(self, S, p):
         xs, ys = np.where(S == 0)
         ts = []
@@ -106,6 +109,7 @@ class TicTacToe:
             s_copy = S.copy()
             s_copy[xs[index], ys[index]] = p
             ts.append(self.evaluation(s_copy, p))
+        # get the index of max t value
         index = np.argmax(np.array(ts))
         S[xs[index], ys[index]] = p
         return S, xs[index], ys[index]
@@ -149,7 +153,7 @@ class TicTacToe:
         return tmp
 
     def run(self, times, strategy):
-        del self.result[:]
+        del self.result[:]  # every time before another run, clean previous results
         for i in range(times):
             self.result.append(self.execute(strategy))
 
