@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -5,21 +6,24 @@ import matplotlib.pyplot as plt
 class Histogram:
     """ plot histogram on given x-y data """
 
-    def __init__(self, x, y):
-        self.x = x
+    def __init__(self, y):
         self.y = y
+        self.s = pd.Series(y, index=['x', 'o', 'draw'])
+        self.my_colors = 'rgb'
 
-    def histogram(self):
-        plt.bar(self.x, self.y, align='center')
-        plt.xlabel('Results')
-        plt.ylabel('Frequency')
-        for i in range(len(self.y)):
-            plt.hlines(self.y[i], 0, self.x[i])
-        plt.show()
+    def histogram(self, title):
+        fig = plt.figure(1, figsize=(14, 14))
+        ax = fig.add_subplot(111)
+        ax.set_xlabel(title)
+        ax.set_ylabel('Win Frequency')
+        ax.set_ylim([0, 1000])
+        self.s.plot(kind='bar', color=self.my_colors)
+        fig.savefig("../results/task1.2/" + title)
+        plt.close()
 
 
 class TicTacToe:
-    """ tic tac toe implementation"""
+    """ tic tac toe implementation """
 
     def __init__(self):
         # relate numbers (1, -1, 0) to symbols ('x', 'o', ' ')
@@ -36,6 +40,8 @@ class TicTacToe:
                                 [10, 0, 0, 0],
                                 [100, 0, 0, 0],
                                 [1000, 0, 0, 0]]
+        self.nodeDict, self.succDict = {}, {}
+        self.strategy = ''
 
     def move_still_possible(self, S):
         return not (S[S == 0].size == 0)
@@ -68,28 +74,31 @@ class TicTacToe:
             B[B == n] = self.symbols[n]
         print B
 
-    # get the indices of max value in self.x_board, which is not occupied in S
-    def indices_of_max_value(self, S):
+    # get the indices of max value in board, which is not occupied in S
+    def indices_of_max_value(self, S, board):
         xs, ys = np.where(S == 0)
         max_v, max_p = -1, -1
         for index, item in enumerate(xs):
-            if self.x_board[item][ys[index]] > max_v:
-                max_v = self.x_board[item][ys[index]]
+            if board[item][ys[index]] > max_v:
+                max_v = board[item][ys[index]]
                 max_p = index
         return xs[max_p], ys[max_p]
 
-    # move to the position on the board
-    def move_at_probability(self, S, p):
-        px, py = self.indices_of_max_value(S)
+    # move to the position based on values the x_board
+    def move_at_probability_x_board(self, S, p):
+        px, py = self.indices_of_max_value(S, self.x_board)
         S[px, py] = p
         return S, px, py
 
-    # heuristic function for player x"
+    # move to the position based on values on the board = x_board + o_board
+    def move_at_probability_whole_board(self, S, p):
+        px, py = self.indices_of_max_value(S, np.add(self.x_board, self.o_board))
+        S[px, py] = p
+        return S, px, py
+
+    # evaluation function
     def evaluation(self, S, p):
-        if p is 'x':
-            opponent = 'o'
-        else:
-            opponent = 'x'
+        opponent = p * -1
         t = 0
         for i, items in enumerate(self.Three_in_a_Row):
             players, others = 0, 0
@@ -114,15 +123,43 @@ class TicTacToe:
         S[xs[index], ys[index]] = p
         return S, xs[index], ys[index]
 
+    def move_at_heuristic_forward(self, S, p):
+        opponent = p * -1
+        xs, ys = np.where(S == 0)
+        ts, heuristic, best, tmp = [], float("-INF"), 0, 0
+        for index, item in enumerate(xs):
+            s_copy = S.copy()
+            s_copy[xs[index], ys[index]] = p
+            utility = self.evaluation(s_copy, p)
+
+            # find the worst your opponent could do
+            worst = float("-INF")
+            xs_, ys_ = np.where(s_copy == 0)
+            for index_, item_ in enumerate(xs_):
+                s_copy_ = s_copy
+                s_copy_[xs_[index_], ys_[index_]] = opponent
+                tmp = self.evaluation(s_copy_, opponent)
+                if tmp > worst :
+                    worst = tmp
+
+            if worst == float("-INF"):
+                worst = 0
+
+            utility -= worst
+            if utility > heuristic: # heuristic keep the largest utility value
+                heuristic = utility
+                best = index
+
+        S[xs[best], ys[best]] = p
+        return S, xs[best], ys[best]
+
     def execute(self, strategy_x):
         tmp = []
         # initialize 3x3 tic tac toe board
         game_state = np.zeros((3, 3), dtype=int)
-
         # initialize player number, move counter
         player = 1
         mvcntr = 1
-
         # initialize flag that indicates win
         noWinnerYet = True
 
@@ -130,11 +167,14 @@ class TicTacToe:
         while self.move_still_possible(game_state) and noWinnerYet:
             # get player symbol
             name = self.symbols[player]
-
             x, y = '', ''
-            if name == 'x' and strategy_x == 'map':
-                game_state, x, y = self.move_at_probability(game_state, player)
-            elif name == 'x' and strategy_x == 'mah':
+            if name == 'x' and strategy_x == 'move at probability x_board':
+                game_state, x, y = self.move_at_probability_x_board(game_state, player)
+            elif name == 'x' and strategy_x == 'move at probability x_o_board':
+                game_state, x, y = self.move_at_probability_x_board(game_state, player)
+            elif name == 'x' and strategy_x == 'move at heuristic':
+                game_state, x, y = self.move_at_heuristic(game_state, player)
+            elif name == 'x' and strategy_x == 'move at heuristic forward':
                 game_state, x, y = self.move_at_heuristic(game_state, player)
             else:
                 game_state, x, y = self.move_at_random(game_state, player)
@@ -154,6 +194,7 @@ class TicTacToe:
 
     def run(self, times, strategy):
         del self.result[:]  # every time before another run, clean previous results
+        self.strategy = strategy
         for i in range(times):
             self.result.append(self.execute(strategy))
 
@@ -172,6 +213,5 @@ class TicTacToe:
             else:
                 fd += 1
         print fx, fo, fd
-        Histogram([1, 2, 3], [fx, fo, fd]).histogram()
-
+        Histogram([fx, fo, fd]).histogram(self.strategy)
 

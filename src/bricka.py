@@ -7,19 +7,18 @@
 import sys
 import pygame
 
-SCREEN_SIZE   = 640,480
-
+SCREEN_SIZE = 640, 480
 # Object dimensions
-BRICK_WIDTH   = 60
-BRICK_HEIGHT  = 15
-PADDLE_WIDTH  = 60
+BRICK_WIDTH = 60
+BRICK_HEIGHT = 15
+PADDLE_WIDTH = 60
 PADDLE_HEIGHT = 12
 BALL_DIAMETER = 16
-BALL_RADIUS   = BALL_DIAMETER / 2
+BALL_RADIUS = BALL_DIAMETER / 2
 
 MAX_PADDLE_X = SCREEN_SIZE[0] - PADDLE_WIDTH
-MAX_BALL_X   = SCREEN_SIZE[0] - BALL_DIAMETER
-MAX_BALL_Y   = SCREEN_SIZE[1] - BALL_DIAMETER
+MAX_BALL_X = SCREEN_SIZE[0] - BALL_DIAMETER
+MAX_BALL_Y = SCREEN_SIZE[1] - BALL_DIAMETER
 
 # Paddle Y coordinate
 PADDLE_Y = SCREEN_SIZE[1] - PADDLE_HEIGHT - 10
@@ -36,6 +35,7 @@ STATE_PLAYING = 1
 STATE_WON = 2
 STATE_GAME_OVER = 3
 
+
 class Bricka:
 
     def __init__(self):
@@ -47,13 +47,12 @@ class Bricka:
         self.clock = pygame.time.Clock()
 
         if pygame.font:
-            self.font = pygame.font.Font(None,30)
+            self.font = pygame.font.Font(None, 30)
         else:
             self.font = None
 
         self.init_game()
 
-        
     def init_game(self):
         self.lives = 3
         self.score = 0
@@ -65,7 +64,6 @@ class Bricka:
         self.ball_vel = [5,-5]
 
         self.create_bricks()
-        
 
     def create_bricks(self):
         y_ofs = 35
@@ -151,8 +149,7 @@ class Bricka:
             x = (SCREEN_SIZE[0] - size[0]) / 2
             y = (SCREEN_SIZE[1] - size[1]) / 2
             self.screen.blit(font_surface, (x,y))
-        
-            
+
     def run(self):
         while 1:            
             for event in pygame.event.get():
