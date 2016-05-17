@@ -22,7 +22,7 @@ WINDOWHEIGHT = 480 # height in pixels
 XMARGIN = int((WINDOWWIDTH - BOARDWIDTH * SPACESIZE) / 2)
 YMARGIN = int((WINDOWHEIGHT - BOARDHEIGHT * SPACESIZE) / 2)
 
-BRIGHTBLUE = (0, 50, 255)
+BRIGHTBLUE = (0, 100, 255)
 WHITE = (255, 255, 255)
 
 BGCOLOR = BRIGHTBLUE
@@ -42,7 +42,7 @@ def move_at_random(S, p):
     y = np.random.choice(np.where(S[0]==0)[0])
     x = np.argmax(np.where(S[:,y]==0))
     S[x,y] = p
-    return S, y
+    return S, y, x
 
 
 def move_was_winning_move(S, p):
@@ -51,18 +51,18 @@ def move_was_winning_move(S, p):
 
     for r in S:
         tmp = [len(a) for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0]
-        if len(tmp) > 0 and np.max(tmp) == 4:
+        if len(tmp) > 0 and np.max(tmp) >= 4:
             return True
 
     for c in S.T:
         tmp = [len(a) for a in np.split(c, np.where(np.diff(c) != 0)[0] + 1) if a[0] != 0]
-        if len(tmp) > 0 and np.max(tmp) == 4:
+        if len(tmp) > 0 and np.max(tmp) >= 4:
             return True
 
     for k in range(-3,4):
         d = np.diag(S, k)
         tmp = [len(a) for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0]
-        if len(tmp) > 0 and np.max(tmp) == 4:
+        if len(tmp) > 0 and np.max(tmp) >= 4:
             return True
 
     return False
@@ -128,14 +128,14 @@ def runGame():
     while move_still_possible(matrixMainBoard) and noWinnerYet:
         name = symbols[player]
         print '%s moves' % name
-        matrixMainBoard, column = move_at_random(matrixMainBoard, player)
+        matrixMainBoard, column, row = move_at_random(matrixMainBoard, player)
 
         if(player == -1):
             color = RED
         else:
             color = BLACK
-        animateComputerMoving(mainBoard, column, color)
-        makeMove(mainBoard, color, column)
+        animateComputerMoving(mainBoard, column, row, color)
+        makeMove(mainBoard, color, column, row)
     
         print_game_state(matrixMainBoard)
 
@@ -147,6 +147,8 @@ def runGame():
             else:
                 winnerImg = COMPUTERWINNERIMG
             noWinnerYet = False
+        else:
+            winnerImg = TIEWINNERIMG
 
         # switch player and increase move counter
         player *= -1
@@ -166,10 +168,10 @@ def runGame():
                 return
 
 
-def makeMove(board, player, column):
-    lowest = getLowestEmptySpace(board, column)
-    if lowest != -1:
-        board[column][lowest] = player
+def makeMove(board, player, column, row):
+    #lowest = getLowestEmptySpace(board, column)
+    #if lowest != -1:
+    board[column][row] = player
 
 
 def drawBoard(board, extraToken=None):
@@ -210,7 +212,7 @@ def getNewBoard():
     return board
 
 
-def animateDroppingToken(board, column, color):
+def animateDroppingToken(board, column, row, color):
     x = XMARGIN + column * SPACESIZE
     y = YMARGIN - SPACESIZE
     dropSpeed = 1.0
@@ -227,7 +229,7 @@ def animateDroppingToken(board, column, color):
         FPSCLOCK.tick()
 
 
-def animateComputerMoving(board, column, color):
+def animateComputerMoving(board, column, row, color):
     if(color == BLACK):
         x = BLACKPILERECT.left
         y = BLACKPILERECT.top
@@ -252,7 +254,7 @@ def animateComputerMoving(board, column, color):
         pygame.display.update()
         FPSCLOCK.tick()
     # dropping the black tile
-    animateDroppingToken(board, column, color)
+    animateDroppingToken(board, column, row, color)
 
 
 def getLowestEmptySpace(board, column):
