@@ -136,11 +136,10 @@ def heuristic(state, player):
     opp_twos = check_four_streak(state, opponent, 2)
     print opp_fours, opp_threes, opp_twos
 
-    if opp_fours > 0 or opp_threes > 0:
+    if opp_fours > 0:
         return -100000
     else:
         return my_fours * 100000 + my_threes * 100 + my_twos * 10 + my_ones
-    # return my_fours * 100000 + my_threes * 100 + my_twos - opp_twos - opp_fours * 100000 - opp_threes * 100
 
 
 def state_to_board(S):
@@ -154,24 +153,30 @@ def board_to_state(board):
 
 
 def search(depth, state, player):
+    opponent = player * -1
     legal_moves = []
     for i in range(7):  # enumerate all legal moves from this state
         temp = state_to_board(state)
         if isValidMove(temp, i):  # if column is a legal move
             x = np.argmax(np.where(state[:, i] == 0))
-            makeMove(temp, player, i, x)
+            makeMove(temp, opponent, i, x)
+            for i in range(len(temp)):
+                for j in range(len(temp[0])):
+                    if temp[i][j] == -1:
+                        temp[i][j] = 'black'
+                    elif temp[i][j] == 1:
+                        temp[i][j] = 'red'
             legal_moves.append(board_to_state(temp))
 
     # if this node (state) is a terminal node or depth == 0
     if depth == 0 or len(legal_moves) == 0 or move_was_winning_move(state, player):
         return heuristic(state, player)  # return the heuristic value of node
 
-    opponent = player * -1
-    alpha = -np.inf
+    alpha = 99999999
     for child in legal_moves:
         if child is None:
             print "child == None (search)"
-        alpha = max(alpha, -search(depth-1, child, opponent))  # get the min of opponent's heuristic
+        alpha = min(alpha, search(depth-1, child, opponent))  # get the min of opponent's heuristic
 
     return alpha
 
@@ -184,10 +189,17 @@ def best_move(depth, state, player):
         if isValidMove(temp, col):  # if column:col is a legal move`
             x = np.argmax(np.where(state[:, col] == 0))
             makeMove(temp, player, col, x)  # make the move in column:'col', row:'x' for current player
-            legal_moves[col] = -search(depth-1, board_to_state(temp), opponent)  # get the min of opponent's heuristic
-    best_alpha = -np.inf
+            for i in range(len(temp)):
+                for j in range(len(temp[0])):
+                    if temp[i][j] == -1:
+                        temp[i][j] = 'black'
+                    elif temp[i][j] == 1:
+                        temp[i][j] = 'red'
+            legal_moves[col] = search(depth-1, board_to_state(temp), player)  # get the min of opponent's heuristic
+    best_alpha = -99999999
     best_move_ = None
     moves = legal_moves.items()
+    print moves
     random.shuffle(list(moves))
     for move, alpha in moves:
         if alpha >= best_alpha:
@@ -197,7 +209,7 @@ def best_move(depth, state, player):
 
 
 # set default search depth is DIFFICULTY
-def move_min_max(S, p, depth=DIFFICULTY):
+def move_min_max(S, p, depth):
     y = best_move(depth, S, p)
     x = np.argmax(np.where(S[:, y] == 0))
     S[x, y] = p
@@ -289,7 +301,7 @@ def runGame():
         name = symbols[player]
         print '%s moves' % name
         if player == 1:
-            matrixMainBoard, column, row = move_at_random(matrixMainBoard, player)
+            matrixMainBoard, column, row = move_min_max(matrixMainBoard, player, 2)
         else:
             if first == -1 and matrixMainBoard[5][3] != 1:  # if human play first, then put the red in the central
                 matrixMainBoard[5][3] = -1
