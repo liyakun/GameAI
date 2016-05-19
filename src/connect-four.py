@@ -1,5 +1,5 @@
 import numpy as np
-
+import os
 
 def move_still_possible(S):
     return 0 in S[0]
@@ -40,10 +40,14 @@ symbols = {1:'x', -1:'o', 0:' '}
 
 # print game state matrix using symbols
 def print_game_state(S):
+    os.system([ 'clear', 'cls' ][ os.name == 'nt' ])
+    print("I want to play a game o_O")
+    print("")
     B = np.copy(S).astype(object)
     for n in [-1, 0, 1]:
         B[B==n] = symbols[n]
     print B
+    print("")
 
 
 if __name__ == '__main__':
