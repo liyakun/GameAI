@@ -18,18 +18,18 @@ def move_was_winning_move(S, p):
 
     for r in S:
         tmp = [len(a) for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0]
-        if len(tmp) > 0 and np.max(tmp) == 4:
+        if len(tmp) > 0 and np.max(tmp) >= 4:
             return True
 
     for c in S.T:
         tmp = [len(a) for a in np.split(c, np.where(np.diff(c) != 0)[0] + 1) if a[0] != 0]
-        if len(tmp) > 0 and np.max(tmp) == 4:
+        if len(tmp) > 0 and np.max(tmp) >= 4:
             return True
 
     for k in range(-3,4):
         d = np.diag(S, k)
         tmp = [len(a) for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0]
-        if len(tmp) > 0 and np.max(tmp) == 4:
+        if len(tmp) > 0 and np.max(tmp) >= 4:
             return True
 
     return False
