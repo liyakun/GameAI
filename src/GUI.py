@@ -1,16 +1,15 @@
-#! /usr/bin/env python3
-
 from Tkinter import *
-from connect_four_for_GUI import ConnectFour
+from connect_four import ConnectFour
+from time import sleep
+
 
 class GUI:
-    elementSize = 50
+    elementSize = 80
     gridBorder = 3
     gridColor = "#AAA"
     p1Color = "#4096EE"
     p2Color = "#FF1A00"
     backgroundColor = "#FFFFFF"
-    gameOn = False
     isAtRandom = False
     
 
@@ -22,31 +21,37 @@ class GUI:
         label = Label(master, text="Connect Four")
         label.grid(row=0)
 
-        button = Button(master, text="New Game!", command=self._newGameButton)
+        button = Button(master, text="New Game, you can play by yourself!", command=self._newGameButton)
         button.grid(row=1)
 
-        button1 = Button(master, text="New Game (random moves)!", command=self._newGameButtonRandom)
+        button1 = Button(master, text="New Game (random automatic moves)!", command=self._newGameButtonRandom)
         button1.grid(row=2)
+
+        button1 = Button(master, text="New Game - optimized moves!", command=self._newGameButtonOptimized)
+        button1.grid(row=3)
+
         
-        self.canvas = Canvas(master, width=200, height=50, background=self.backgroundColor, highlightthickness=0)
-        self.canvas.grid(row=3)
+        self.canvas = Canvas(master, background=self.backgroundColor, highlightthickness=0)
+        self.canvas.grid(row=4)
 
         self.currentPlayerVar = StringVar(self.master, value="")
         self.currentPlayerLabel = Label(self.master, textvariable=self.currentPlayerVar, anchor=W)
-        self.currentPlayerLabel.grid(row=4)
+        self.currentPlayerLabel.grid(row=5)
 
         self.canvas.bind('<Button-1>', self._canvasClick)
         self.newGame()
 
 
-    def draw(self):
+    def drawGameState(self):
+        #sleep(0.3)
+        max_row = self.game.size['r'] -1
         for c in range(self.game.size['c']):
             for r in range(self.game.size['r']):
 
                 x0 = c*self.elementSize
-                y0 = r*self.elementSize
+                y0 = (max_row-r)*self.elementSize
                 x1 = (c+1)*self.elementSize
-                y1 = (r+1)*self.elementSize
+                y1 = ((max_row-r)+1)*self.elementSize
                 if self.game.gameState[r][c] == 1:
                     fill = self.p1Color
                     self.canvas.create_oval(x0 + 2,
@@ -90,63 +95,87 @@ class GUI:
         rows = 6
         
         self.game = ConnectFour(self.isAtRandom, columns=columns, rows=rows)
+
         self.canvas.delete(ALL)
         self.canvas.config(width=(self.elementSize)*columns,
                            height=(self.elementSize)*rows)
-        self.master.update() # Rerender window
         self.drawGrid()
-        self.draw()
+        self.drawGameState()
+        self.master.update() # Rerender window
 
         self._updateCurrentPlayer()
 
-        self.gameOn = True
 
 
     def _updateCurrentPlayer(self):
+        
+        self.game.update_player()
+        
         p = None
-        self.game.player *= (-1)
         if(self.game.player == 1):
             p = self.p1  
         else: 
             p = self.p2
         self.currentPlayerVar.set('Current player: ' + p)
 
+    def drawAndCheckForWinning(self):
+        self.drawGameState()            
+        # evaluate game state
+        if self.game.move_was_winning_move(self.game.gameState, self.game.player):
+            self.game.noWinnerYet = False
+            x = self.canvas.winfo_width() // 2
+            y = self.canvas.winfo_height() // 2
+            if self.game.player == 1:
+                winner = self.p1
+            else:
+                winner = self.p2
+            t = winner + ' won!'
+            self.canvas.create_text(x, y, text=t, font=("Helvetica", 32), fill="#333")
+        elif( self.game.move_still_possible(self.game.gameState) == 0 ):
+            self.game.noWinnerYet = False
+            x = self.canvas.winfo_width() // 2
+            y = self.canvas.winfo_height() // 2
+            self.canvas.create_text(x, y, text='there is a draw', font=("Helvetica", 32), fill="#333")
+        
+               
 
     def _canvasClick(self, event):
-        if not self.gameOn: return
+        if not self.game.noWinnerYet: return
         if self.game.move_was_winning_move(self.game.gameState, self.game.player): return
         
         c = event.x // self.elementSize
-        
         if (0 <= c < self.game.size['c']):
             if(self.drop(c)):
-                self.draw()            
-                # evaluate game state
-                if self.game.move_was_winning_move(self.game.gameState, self.game.player):
-                    noWinnerYet = False
-                    x = self.canvas.winfo_width() // 2
-                    y = self.canvas.winfo_height() // 2
-                    winner = None
-                    if self.game.player == 1:
-                        winner = self.p1
-                    else:
-                        winner = self.p2
-                    t = winner + ' won!'
-                    self.canvas.create_text(x, y, text=t, font=("Helvetica", 32), fill="#333")
-                elif( self.game.move_still_possible(self.game.gameState) == 0 ):
-                    x = self.canvas.winfo_width() // 2
-                    y = self.canvas.winfo_height() // 2
-                    self.canvas.create_text(x, y, text='there is a draw', font=("Helvetica", 32), fill="#333")
-                
+                self.drawAndCheckForWinning()
                 self._updateCurrentPlayer()
+    
+    def sleepInGame(self):
+        sleep(0.2)
+        self.master.update() # Rerender window
+
+
+    def runRandomGame(self, isSleep):
+        while(self.game.noWinnerYet ):
+            if(self.drop(1)):
+                self.drawAndCheckForWinning()
+                self._updateCurrentPlayer()
+                self.sleepInGame()
+
 
     def _newGameButton(self):
         self.isAtRandom = False
         self.newGame()
 
+
     def _newGameButtonRandom(self):
         self.isAtRandom = True
         self.newGame()
+        self.runRandomGame(True)
+
+
+    def _newGameButtonOptimized(self):
+        z = 1
+        # connect here optimization
 
 root = Tk()
 app = GUI(root)
