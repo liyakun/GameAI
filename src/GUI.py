@@ -154,7 +154,7 @@ class GUI:
     
     def runOptimizedGame(self, isSleep):
         while(self.game.noWinnerYet ):
-            self.game.move_min_max(self.game.gameState, 1,2)
+            self.game.move_min_max(self.game.gameState, self.game.player,2)
             self.drawAndCheckForWinning()
             self._updateCurrentPlayer()
             self.sleepInGame()

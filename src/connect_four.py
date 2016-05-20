@@ -118,7 +118,7 @@ class ConnectFour:
         for col in range(7):  # enumerate all legal moves
             if self.is_valid_move(state, col):  # if column:col is a legal move`
                 s_copy = np.copy(state)
-                self.make_move(s_copy)
+                self.make_move(s_copy, player, col)
                 legal_moves[col] = self.search(depth - 1, s_copy, player)  # get the min of opponent's heuristic
         best_alpha = -99999999
         best_move_ = None
@@ -139,13 +139,13 @@ class ConnectFour:
 
     def heuristic(self, state, player):
         opponent = player * -1
-        my_fours = self.check_four_streak(state, player, 4)
-        my_threes = self.check_four_streak(state, player, 3)
-        my_twos = self.check_four_streak(state, player, 2)
-        my_ones = self.check_four_streak(state, player, 1)
-        opp_fours = self.check_four_streak(state, opponent, 4)
-        opp_threes = self.check_four_streak(state, opponent, 3)
-        opp_twos = self.check_four_streak(state, opponent, 2)
+        my_fours = self.check_for_streak(state, player, 4)
+        my_threes = self.check_for_streak(state, player, 3)
+        my_twos = self.check_for_streak(state, player, 2)
+        my_ones = self.check_for_streak(state, player, 1)
+        opp_fours = self.check_for_streak(state, opponent, 4)
+        opp_threes = self.check_for_streak(state, opponent, 3)
+        opp_twos = self.check_for_streak(state, opponent, 2)
         if opp_fours > 0:
             return -100000
         else:
