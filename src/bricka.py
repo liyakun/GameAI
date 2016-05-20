@@ -34,7 +34,7 @@ STATE_BALL_IN_PADDLE = 0
 STATE_PLAYING = 1
 STATE_WON = 2
 STATE_GAME_OVER = 3
-
+SPEED = 1
 
 class Bricka:
 
@@ -99,8 +99,8 @@ class Bricka:
             self.init_game()
 
     def move_ball(self):
-        self.ball.left += self.ball_vel[0]
-        self.ball.top  += self.ball_vel[1]
+        self.ball.left += SPEED*self.ball_vel[0]
+        self.ball.top  += SPEED*self.ball_vel[1]
 
         if self.ball.left <= 0:
             self.ball.left = 0
