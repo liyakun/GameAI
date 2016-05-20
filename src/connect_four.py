@@ -68,7 +68,17 @@ class ConnectFour:
 
         return False
 
+    def check_for_streak(self, S, p, size):
+        count = 0
+        for r in S:
+            ctr+= sum([1 for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
 
+        for c in S.T:
+            ctr+=sum([1 for a in np.split(c, np.where(np.diff(c) != 0)[0] + 1) if a[0] == p and len(a) == size])
+
+        for k in range(-3,4):
+            d = np.diag(S, k)
+            ctr += sum([1 for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
 
 
     # print game state matrix using symbols
