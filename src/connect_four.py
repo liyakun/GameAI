@@ -81,6 +81,21 @@ class ConnectFour:
             ctr += sum([1 for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
         return ctr
 
+    def heuristic(state, player):
+        opponent = player * -1
+        my_fours = check_four_streak(state, player, 4)
+        my_threes = check_four_streak(state, player, 3)
+        my_twos = check_four_streak(state, player, 2)
+        my_ones = check_four_streak(state, player, 1)
+        opp_fours = check_four_streak(state, opponent, 4)
+        opp_threes = check_four_streak(state, opponent, 3)
+        opp_twos = check_four_streak(state, opponent, 2)
+        if opp_fours > 0:
+            return -100000
+        else:
+            return my_fours * 100000 + my_threes * 100 + my_twos * 10 + my_ones
+
+
     # print game state matrix using symbols
     def print_game_state(self, S):
         os.system([ 'clear', 'cls' ][ os.name == 'nt' ])
