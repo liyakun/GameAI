@@ -1,17 +1,17 @@
 import numpy as np
 import os, random
 
-
 class ConnectFour:
-    
-    def __init__(self, isAtRandom, columns = 7, rows = 6):
-        self.size = {'c' : columns, 'r': rows} # 7 columns x 6 rows       
+
+    #0 is random, 1 is DeepAI, 2 is manual
+    def __init__(self, gameType, columns = 7, rows = 6):
+        self.size = {'c' : columns, 'r': rows} # 7 columns x 6 rows
         self.gameState = np.zeros((6,7), dtype=int)
         self.player = 1
         self.mvcntr = 1
         self.noWinnerYet = True
         self.symbols = {1:'x', -1:'o', 0:' '}
-        self.isAtRandom = isAtRandom
+        self.gameType = gameType
         self.symbols = {1: 'x', -1: 'o', 0: ' '}
         self.boardwidth = columns
 
@@ -43,12 +43,14 @@ class ConnectFour:
         S[x,y] = p
         return S
 
-    def drop(self, column): # Drop a disc into a column
-        if( self.isAtRandom ):
+    def drop(self, column):  # Drop a disc into a column
+        if self.gameType == 0:
             self.gameState = self.move_at_random(self.gameState, self.player)
+        elif self.gameType ==1:
+            self.gameState = self.move_min_max(self.gameState, self.player, 2)
         else:
-            # print(sum( self.gameState[:,column] == 0))
-            if(sum( self.gameState[:,column] == 0) == 0):
+            # print(sum( self.gamestate[:,column] == 0))
+            if sum(self.gameState[:,column] == 0) == 0:
                 return False
             self.gameState = self.move_desired(self.gameState, self.player, column)
 

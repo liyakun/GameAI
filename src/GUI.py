@@ -11,7 +11,6 @@ class GUI:
     p2Color = "#FF1A00"
     backgroundColor = "#FFFFFF"
     isAtRandom = False
-    
 
     def __init__(self, master):
         self.master = master
@@ -41,7 +40,6 @@ class GUI:
         self.canvas.bind('<Button-1>', self._canvasClick)
         self.newGame()
 
-
     def drawGameState(self):
         #sleep(0.3)
         max_row = self.game.size['r'] -1
@@ -68,7 +66,6 @@ class GUI:
                                         self.canvas.winfo_height() - (y1 - 2),
                                         fill = fill, outline=self.gridColor)
 
-
     def drawGrid(self):
         x0, x1 = 0, self.canvas.winfo_width()
         for r in range(1, self.game.size['r']):
@@ -80,10 +77,8 @@ class GUI:
             x = c*self.elementSize
             self.canvas.create_line(x, y0, x, y1, fill=self.gridColor)
 
-
     def drop(self, column):
         return self.game.drop(column)
-
 
     def newGame(self):
         # Ask for players' names
@@ -104,8 +99,6 @@ class GUI:
         self.master.update() # Rerender window
 
         self._updateCurrentPlayer()
-
-
 
     def _updateCurrentPlayer(self):
         
@@ -136,8 +129,6 @@ class GUI:
             x = self.canvas.winfo_width() // 2
             y = self.canvas.winfo_height() // 2
             self.canvas.create_text(x, y, text='there is a draw', font=("Helvetica", 32), fill="#333")
-        
-               
 
     def _canvasClick(self, event):
         if not self.game.noWinnerYet: return
@@ -163,18 +154,18 @@ class GUI:
 
 
     def _newGameButton(self):
-        self.isAtRandom = False
+        self.gameType = 0;
         self.newGame()
 
 
     def _newGameButtonRandom(self):
-        self.isAtRandom = True
+        self.gameType = 1;
         self.newGame()
         self.runRandomGame(True)
 
 
     def _newGameButtonOptimized(self):
-        z = 1
+        self.gameType = 2;
         # connect here optimization
 
 root = Tk()
