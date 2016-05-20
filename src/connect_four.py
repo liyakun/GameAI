@@ -1,4 +1,5 @@
 import numpy as np
+import os, random
 
 
 class ConnectFour:
@@ -11,11 +12,21 @@ class ConnectFour:
         self.noWinnerYet = True
         self.symbols = {1:'x', -1:'o', 0:' '}
         self.isAtRandom = isAtRandom
+        self.symbols = {1: 'x', -1: 'o', 0: ' '}
+        self.boardwidth = columns
+
+    def is_valid_move(self, S, column):
+        if column < 0 or column >= (self.boardwidth) or S[0][column] != 0:
+            return False
+        return True
+
+    def make_move(self, S, player, column):
+        row = np.argmax(np.where(S[:, column] == 0))
+        S[row][column] = player
 
 
     def move_still_possible(self, S):
         return 0 in S[0]
-
 
     def update_player(self):
         self.player *= (-1)
@@ -26,13 +37,11 @@ class ConnectFour:
         S[x,y] = p
         return S
 
-
     def move_desired(self, S, p, column):
         y = column
         x = np.argmax(np.where(S[:,y]==0))
         S[x,y] = p
         return S
-
 
     def drop(self, column): # Drop a disc into a column
         if( self.isAtRandom ):
@@ -44,7 +53,6 @@ class ConnectFour:
             self.gameState = self.move_desired(self.gameState, self.player, column)
 
         return True
-
 
     def move_was_winning_move(self, S, p):
         # we do not need to check the sign of the largest stroke because we do
@@ -71,15 +79,55 @@ class ConnectFour:
     def check_for_streak(self, S, p, size):
         ctr = 0
         for r in S:
-            ctr+= sum([1 for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
+            ctr += sum([1 for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
 
         for c in S.T:
-            ctr+=sum([1 for a in np.split(c, np.where(np.diff(c) != 0)[0] + 1) if a[0] == p and len(a) == size])
+            ctr +=sum([1 for a in np.split(c, np.where(np.diff(c) != 0)[0] + 1) if a[0] == p and len(a) == size])
 
-        for k in range(-3,4):
+        for k in range(-3, 4):
             d = np.diag(S, k)
             ctr += sum([1 for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
         return ctr
+
+    def search(self, depth, state, player):
+        opponent = player * -1
+        legal_moves = []
+        for i in range(7):  # enumerate all legal moves from this state
+            if self.is_valid_move(state, i):  # if column is a legal move
+                s_copy = np.copy(state)
+                self.make_move(s_copy, player, i)
+                legal_moves.append(s_copy)
+
+        # if this node (state) is a terminal node or depth == 0
+        if depth == 0 or len(legal_moves) == 0 or self.move_was_winning_move(state, player):
+            return heuristic(state, player)  # return the heuristic value of node
+
+        alpha = 99999999
+        for child in legal_moves:
+            if child is None:
+                print "child == None (search)"
+            alpha = min(alpha, search(depth - 1, child, opponent))  # get the min of opponent's heuristic
+
+        return alpha
+
+    def best_move(self, depth, state, player):
+        opponent = player * -1
+        legal_moves = {}
+        for col in range(7):  # enumerate all legal moves
+            if self.is_valid_move(state, col):  # if column:col is a legal move`
+                s_copy = np.copy(state)
+                self.make_move(s_copy)
+                legal_moves[col] = self.search(depth - 1, s_copy, player)  # get the min of opponent's heuristic
+        best_alpha = -99999999
+        best_move_ = None
+        moves = legal_moves.items()
+        print moves
+        random.shuffle(list(moves))
+        for move, alpha in moves:
+            if alpha >= best_alpha:
+                best_alpha = alpha
+                best_move_ = move
+        return best_move_  # return the column for best move
 
     # print game state matrix using symbols
     def print_game_state(self, S):
@@ -88,6 +136,6 @@ class ConnectFour:
         print("")
         B = np.copy(S).astype(object)
         for n in [-1, 0, 1]:
-            B[B==n] = symbols[n]
+            B[B==n] = self.symbols[n]
         print B
         print("")
