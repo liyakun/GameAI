@@ -100,13 +100,13 @@ class ConnectFour:
 
         # if this node (state) is a terminal node or depth == 0
         if depth == 0 or len(legal_moves) == 0 or self.move_was_winning_move(state, player):
-            return heuristic(state, player)  # return the heuristic value of node
+            return self.heuristic(state, player)  # return the heuristic value of node
 
         alpha = 99999999
         for child in legal_moves:
             if child is None:
                 print "child == None (search)"
-            alpha = min(alpha, search(depth - 1, child, opponent))  # get the min of opponent's heuristic
+            alpha = min(alpha, self.search(depth - 1, child, opponent))  # get the min of opponent's heuristic
 
         return alpha
 
@@ -128,15 +128,22 @@ class ConnectFour:
                 best_alpha = alpha
                 best_move_ = move
         return best_move_  # return the column for best move
-    def heuristic(state, player):
+
+    def move_min_max(self, S, p, depth):
+        y = self.best_move(depth, S, p)
+        x = np.argmax(np.where(S[:, y] == 0))
+        S[x, y] = p
+        return S, y
+
+    def heuristic(self, state, player):
         opponent = player * -1
-        my_fours = check_four_streak(state, player, 4)
-        my_threes = check_four_streak(state, player, 3)
-        my_twos = check_four_streak(state, player, 2)
-        my_ones = check_four_streak(state, player, 1)
-        opp_fours = check_four_streak(state, opponent, 4)
-        opp_threes = check_four_streak(state, opponent, 3)
-        opp_twos = check_four_streak(state, opponent, 2)
+        my_fours = self.check_four_streak(state, player, 4)
+        my_threes = self.check_four_streak(state, player, 3)
+        my_twos = self.check_four_streak(state, player, 2)
+        my_ones = self.check_four_streak(state, player, 1)
+        opp_fours = self.check_four_streak(state, opponent, 4)
+        opp_threes = self.check_four_streak(state, opponent, 3)
+        opp_twos = self.check_four_streak(state, opponent, 2)
         if opp_fours > 0:
             return -100000
         else:
