@@ -151,7 +151,13 @@ class GUI:
                 self.drawAndCheckForWinning()
                 self._updateCurrentPlayer()
                 self.sleepInGame()
-
+    
+    def runOptimizedGame(self, isSleep):
+        while(self.game.noWinnerYet ):
+            self.game.move_min_max(self.game.gameState, 1,2)
+            self.drawAndCheckForWinning()
+            self._updateCurrentPlayer()
+            self.sleepInGame()
 
     def _newGameButton(self):
         self.gameType = 0;
@@ -166,6 +172,8 @@ class GUI:
 
     def _newGameButtonOptimized(self):
         self.gameType = 2;
+        self.newGame()
+        self.runOptimizedGame(True)
         # connect here optimization
 
 root = Tk()
