@@ -139,7 +139,7 @@ def heuristic(state, player):
     if opp_fours > 0:
         return -100000
     else:
-        return my_fours * 100000 + my_threes * 100 + my_twos * 10 + my_ones
+        return my_fours * 100000 + my_threes * 100 + my_twos * 10
 
 
 def state_to_board(S):
@@ -172,11 +172,11 @@ def search(depth, state, player):
     if depth == 0 or len(legal_moves) == 0 or move_was_winning_move(state, player):
         return heuristic(state, player)  # return the heuristic value of node
 
-    alpha = 99999999
+    alpha = -99999999
     for child in legal_moves:
         if child is None:
             print "child == None (search)"
-        alpha = min(alpha, search(depth-1, child, opponent))  # get the min of opponent's heuristic
+        alpha = max(alpha, heuristic(state, player) - search(depth-1, child, opponent))  # get the min of opponent's heuristic
 
     return alpha
 
@@ -301,14 +301,14 @@ def runGame():
         name = symbols[player]
         print '%s moves' % name
         if player == 1:
-            matrixMainBoard, column, row = move_min_max(matrixMainBoard, player, 2)
+            matrixMainBoard, column, row = move_at_random(matrixMainBoard, player)
         else:
-            if first == -1 and matrixMainBoard[5][3] != 1:  # if human play first, then put the red in the central
-                matrixMainBoard[5][3] = -1
-                column, row = 3, 5
-                first = 0
-            else:
-                matrixMainBoard, column, row = move_min_max(matrixMainBoard, player, 2)
+            #if first == -1 and matrixMainBoard[5][3] != 1:  # if human play first, then put the red in the central
+            #    matrixMainBoard[5][3] = -1
+            #    column, row = 3, 5
+            #    first = 0
+            #else:
+            matrixMainBoard, column, row = move_min_max(matrixMainBoard, player, 2)
         if player == -1:
             color = RED
         else:
@@ -321,6 +321,7 @@ def runGame():
         # evaluate game state
         if move_was_winning_move(matrixMainBoard, player):
             print 'player %s wins after %d moves' % (player, mvcntr)
+            #f.write('player %s wins after %d moves' % (player, mvcntr))
             if player == -1:
                 winnerImg = HUMANWINNERIMG
             else:
@@ -462,4 +463,6 @@ def isBoardFull(board):
 
 
 if __name__ == '__main__':
+    #f = open("output.txt", 'r+')
+    #for i in range(1000):
     main()
