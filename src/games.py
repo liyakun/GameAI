@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import sys
 
 class Histogram:
     """ plot histogram on given x-y data """
@@ -30,7 +30,7 @@ class TicTacToe:
         self.symbols = {1: 'x', -1: 'o', 0: ' '}
         self.result = []
         # x_board and o_board hold the win information after 1000 runs
-        self.x_board, self.o_board = np.zeros((3, 3), dtype=int), np.zeros((3, 3), dtype=int)
+        self.x_board, self.o_board = np.zeros((3, 3), dtype=float), np.zeros((3, 3), dtype=float)
         # hold all the three in a line information
         self.Three_in_a_Row = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8],
                                         [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -155,6 +155,9 @@ class TicTacToe:
 
     def execute(self, strategy_x):
         tmp = []
+        moves_in_each_game_x = []
+        moves_in_each_game_o = []
+
         # initialize 3x3 tic tac toe board
         game_state = np.zeros((3, 3), dtype=int)
         # initialize player number, move counter
@@ -171,7 +174,7 @@ class TicTacToe:
             if name == 'x' and strategy_x == 'move at probability x_board':
                 game_state, x, y = self.move_at_probability_x_board(game_state, player)
             elif name == 'x' and strategy_x == 'move at probability x_o_board':
-                game_state, x, y = self.move_at_probability_x_board(game_state, player)
+                game_state, x, y = self.move_at_probability_whole_board(game_state, player)
             elif name == 'x' and strategy_x == 'move at heuristic':
                 game_state, x, y = self.move_at_heuristic(game_state, player)
             elif name == 'x' and strategy_x == 'move at heuristic forward':
@@ -179,9 +182,18 @@ class TicTacToe:
             else:
                 game_state, x, y = self.move_at_random(game_state, player)
 
+            moves = [x, y]
+            if( name == 'x'):
+                moves_in_each_game_x.append(moves)
+            else:
+                moves_in_each_game_o.append(moves)
+
             # evaluate game state
             if self.move_was_winning_move(game_state, player):
-                tmp.extend([name, x, y])
+                if( name == 'x'):
+                    tmp.extend([name, moves_in_each_game_x])
+                else:
+                    tmp.extend([name, moves_in_each_game_o])
                 noWinnerYet = False
 
             # switch player and increase move counter
@@ -198,20 +210,33 @@ class TicTacToe:
         for i in range(times):
             self.result.append(self.execute(strategy))
 
-    def draw(self):
+    def draw(self, is_board_positions_save):
         fx, fo, fd = 0, 0, 0
-        position_x, position_o = [], []
         for index, item in enumerate(self.result):
             if 'x' in item:
                 fx += 1
-                self.x_board[item[1]][item[2]] += 1
-                position_x.append(item[-2:])
+                if( is_board_positions_save ):
+                    for taken_position in item[1]:
+                        self.x_board[taken_position[0]][taken_position[1]] += 1
             elif 'o' in item:
                 fo += 1
-                self.o_board[item[1]][item[2]] += 1
-                position_o.append(item[-2:])
+                if( is_board_positions_save ):
+                    for taken_position in item[1]:
+                        self.o_board[taken_position[0]][taken_position[1]] += 1
             else:
                 fd += 1
         print fx, fo, fd
+
+        # Normalize arrays
+        
+        x_board_sum = np.sum(self.x_board)
+        self.x_board = self.x_board / float(x_board_sum)
+        
+        np.savetxt('x_board.txt', self.x_board )
+
+        o_board_sum = np.sum(self.o_board)
+        self.o_board = self.o_board / float(o_board_sum)        
+        np.savetxt('o_board.txt', self.o_board )
+
         Histogram([fx, fo, fd]).histogram(self.strategy)
 
