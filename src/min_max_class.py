@@ -83,22 +83,22 @@ class MinMax:
         state, player, level = self.state, self.player, self.level
         self.build_tree(state, player, node, level)
 
-        # compute min-max value of node, and return the next state
-        mmv = self.max_node_util(node)
+        # as here 'player' is actually our opponent, we want his min
+        mmv = self.min_node_util(node)
         return next(self.nodeDict[succ] for succ in self.nodeSuccDict[node] if self.nodeMinMaxDict[succ] is mmv), mmv
+
 
 if __name__ == '__main__':
     ttt = TicTacToe()
     state = np.array([
-        [1, -1, 0],
-        [0, -1, 0],
-        [0, 0, 1]
+        [-1, 0, 1],
+        [0, 1, 0],
+        [0, 0, 0]
     ])
     player = 1
     level = 2
     minmax = MinMax(ttt, 'ttt', player, level, state)
     print minmax.run_min_max()
-
     connect4 = ConnectFour(7, 6)
     state = np.array([
         [0, 0, 0, 0, 0, 0, 0],

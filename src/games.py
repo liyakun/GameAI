@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
+#from min_max_class import MinMax
 
 class Histogram:
     """ plot histogram on given x-y data """
@@ -153,6 +153,12 @@ class TicTacToe:
         S[xs[best], ys[best]] = p
         return S, xs[best], ys[best]
 
+    def move_min_max(self, state, player, level):
+        minmax = MinMax(TicTacToe(), 'ttt', player * -1, level, state)
+        new_state, score = minmax.run_min_max()
+        xs, ys = np.nonzero(np.subtract(state, new_state))  # get new added position
+        return new_state, xs[0], ys[0]
+
     def execute(self, strategy_x):
         tmp = []
         moves_in_each_game_x = []
@@ -180,7 +186,7 @@ class TicTacToe:
             elif name == 'x' and strategy_x == 'move at heuristic forward':
                 game_state, x, y = self.move_at_heuristic(game_state, player)
             else:
-                game_state, x, y = self.move_at_random(game_state, player)
+                game_state, x, y = self.move_min_max(game_state, player, 3)
 
             moves = [x, y]
             if( name == 'x'):
