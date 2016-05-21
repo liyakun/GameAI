@@ -10,7 +10,6 @@ class GUI:
     p1Color = "#4096EE"
     p2Color = "#FF1A00"
     backgroundColor = "#FFFFFF"
-    isAtRandom = False
 
     def __init__(self, master):
         self.master = master
@@ -23,10 +22,10 @@ class GUI:
         button = Button(master, text="New Game, you can play by yourself!", command=self._newGameButton)
         button.grid(row=1)
 
-        button1 = Button(master, text="New Game (random automatic moves)!", command=self._newGameButtonRandom)
+        button1 = Button(master, text="New Game (random vs random)!", command=self._newGameButtonRandom)
         button1.grid(row=2)
 
-        button1 = Button(master, text="New Game - optimized moves!", command=self._newGameButtonOptimized)
+        button1 = Button(master, text="New Game - random vs heuristic!", command=self._newGameButtonOptimized)
         button1.grid(row=3)
 
         
@@ -77,23 +76,15 @@ class GUI:
             x = c*self.elementSize
             self.canvas.create_line(x, y0, x, y1, fill=self.gridColor)
 
-    def drop(self, column):
-        return self.game.drop(column)
-
-    def newGame(self):
+    def newGame(self, p1type='random', p2type='random'):
         # Ask for players' names
         self.p1 = 'Blue'
         self.p2 = 'Red'
 
-        # Ask for grid size
-        columns = 7
-        rows = 6
-        
-        self.game = ConnectFour(self.isAtRandom, columns=columns, rows=rows)
-
+        self.game = ConnectFour(p1type=p1type, p2type=p2type)
         self.canvas.delete(ALL)
-        self.canvas.config(width=(self.elementSize)*columns,
-                           height=(self.elementSize)*rows)
+        self.canvas.config(width=(self.elementSize)*self.game.size['c'],
+                           height=(self.elementSize)*self.game.size['r'])
         self.drawGrid()
         self.drawGameState()
         self.master.update() # Rerender window
@@ -101,10 +92,7 @@ class GUI:
         self._updateCurrentPlayer()
 
     def _updateCurrentPlayer(self):
-        
         self.game.update_player()
-        
-        p = None
         if(self.game.player == 1):
             p = self.p1  
         else: 
@@ -136,7 +124,7 @@ class GUI:
         
         c = event.x // self.elementSize
         if (0 <= c < self.game.size['c']):
-            if(self.drop(c)):
+            if(self.game.drop(c)):
                 self.drawAndCheckForWinning()
                 self._updateCurrentPlayer()
     
@@ -144,37 +132,28 @@ class GUI:
         sleep(0.2)
         self.master.update() # Rerender window
 
-
-    def runRandomGame(self, isSleep):
+    def game_loop(self):
         while(self.game.noWinnerYet ):
-            if(self.drop(1)):
-                self.drawAndCheckForWinning()
-                self._updateCurrentPlayer()
-                self.sleepInGame()
-    
-    def runOptimizedGame(self, isSleep):
-        while(self.game.noWinnerYet ):
-            self.game.move_min_max(self.game.gameState, self.game.player,2)
+            self.game.drop()
             self.drawAndCheckForWinning()
             self._updateCurrentPlayer()
             self.sleepInGame()
 
     def _newGameButton(self):
-        self.gameType = 0;
-        self.newGame()
-
+        self.newGame(p1type='manual', p2type='manual')
+        while(self.game.noWinnerYet and 0 not in self.game.gameState[0]):
+            if(self.game.drop()):
+                self.drawAndCheckForWinning()
+                self._updateCurrentPlayer()
+                self.sleepInGame()
 
     def _newGameButtonRandom(self):
-        self.gameType = 1;
-        self.newGame()
-        self.runRandomGame(True)
-
+        self.newGame(p1type='random', p2type='random')
+        self.game_loop()
 
     def _newGameButtonOptimized(self):
-        self.gameType = 2;
-        self.newGame()
-        self.runOptimizedGame(True)
-        # connect here optimization
+        self.newGame(p1type='random', p2type='heuristic')
+        self.game_loop()
 
 root = Tk()
 app = GUI(root)
