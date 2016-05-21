@@ -1,5 +1,6 @@
 import numpy as np
 from games import TicTacToe
+from connect_four import ConnectFour
 
 
 class MinMax:
@@ -84,9 +85,6 @@ class MinMax:
 
         # compute min-max value of node, and return the next state
         mmv = self.max_node_util(node)
-        for succ in self.nodeSuccDict[node]:
-            print self.nodeDict[succ]
-            print self.nodeMinMaxDict[succ]
         return next(self.nodeDict[succ] for succ in self.nodeSuccDict[node] if self.nodeMinMaxDict[succ] is mmv), mmv
 
 if __name__ == '__main__':
@@ -99,5 +97,18 @@ if __name__ == '__main__':
     player = 1
     level = 2
     minmax = MinMax(ttt, 'ttt', player, level, state)
+    print minmax.run_min_max()
 
+    connect4 = ConnectFour(7, 6)
+    state = np.array([
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, -1, 1, 0, 0, 0],
+        [0, 0, -1, 1, 0, 0, 0]
+    ])
+    player = 1
+    level = 2
+    minmax = MinMax(connect4, 'connect_four', player, level, state)
     print minmax.run_min_max()

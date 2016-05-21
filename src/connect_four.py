@@ -4,7 +4,7 @@ import os, random
 class ConnectFour:
 
     #0 is random, 1 is DeepAI, 2 is manual
-    def __init__(self, gameType, columns = 7, rows = 6):
+    def __init__(self, gameType=None, columns = 7, rows = 6):
         self.size = {'c' : columns, 'r': rows} # 7 columns x 6 rows
         self.gameState = np.zeros((6,7), dtype=int)
         self.player = 1
@@ -102,7 +102,7 @@ class ConnectFour:
 
         # if this node (state) is a terminal node or depth == 0
         if depth == 0 or len(legal_moves) == 0 or self.move_was_winning_move(state, player):
-            return self.heuristic(state, player)  # return the heuristic value of node
+            return self.evaluation(state, player)  # return the heuristic value of node
 
         alpha = 99999999
         for child in legal_moves:
@@ -137,7 +137,7 @@ class ConnectFour:
         S[x, y] = p
         return S, y
 
-    def heuristic(self, state, player):
+    def evaluation(self, state, player):
         opponent = player * -1
         my_fours = self.check_for_streak(state, player, 4)
         my_threes = self.check_for_streak(state, player, 3)
