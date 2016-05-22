@@ -39,7 +39,7 @@ class Helper:
             if len(tmp) > 0 and np.max(tmp) >= 4:
                 return True
 
-        for k in range(-3,4):
+        for k in range(-4,4):
             d = np.diag(S, k)
             tmp = [len(a) for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0]
             if len(tmp) > 0 and np.max(tmp) >= 4:
@@ -62,10 +62,19 @@ class Helper:
         opp_fours = Helper.check_for_streak(state, opponent, 4)
         opp_threes = Helper.check_for_streak(state, opponent, 3)
         opp_twos = Helper.check_for_streak(state, opponent, 2)
-        if opp_fours > 0:
+
+        my_fives = Helper.check_for_streak(state, player, 5)
+        my_sixes = Helper.check_for_streak(state, player, 6)
+        opp_fives = Helper.check_for_streak(state, opponent, 5)
+        opp_sixes = Helper.check_for_streak(state, opponent, 6)
+
+        my_score = (my_fours + my_fives + my_sixes) * 100000 + my_threes * 100 + my_twos * 10 + my_ones
+        opp_score = (opp_fours + opp_fives + opp_sixes) * 100000 + opp_threes * 100 + opp_twos * 10 
+
+        if opp_fours > 0 or opp_fives > 0 or opp_sixes > 0:
             return -100000
         else:
-            return my_fours * 100000 + my_threes * 100 + my_twos * 10 + my_ones
+            return -my_score + opp_score
 
 class Player:
     def __init__(self, id, type='random'):
@@ -90,7 +99,7 @@ class Player:
             assert(False)
 
     def move_minmax(self, S):
-        minmax = MinMax(Helper, 'connect_four', (-1)*self.id, 3, S)
+        minmax = MinMax(Helper, 'connect_four', (-1)*self.id, 2, S)
         S_temp = minmax.run_min_max()
         subtracted = np.subtract(S_temp, S)
         np.nonzero( subtracted )
@@ -161,6 +170,7 @@ class ConnectFour:
     def __init__(self, columns = 7, rows = 6, p1type='random', p2type='random'):
         self.size = {'c' : columns, 'r': rows} # 7 columns x 6 rows
         self.gameState = np.zeros((6,7), dtype=int)
+
         self.player = 1
         self.mvcntr = 1
         self.noWinnerYet = True

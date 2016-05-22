@@ -1,6 +1,7 @@
 import numpy as np
 from games import TicTacToe
 #from connect_four import ConnectFour
+import sys
 
 class MinMax:
 
@@ -32,6 +33,9 @@ class MinMax:
         self.nodeMinMaxDict[node] = mmv
         return mmv
 
+
+
+
     def next_step_ttt(self, player, state, succ):
         rs, cs = np.where(state == 0)
         for j in range(rs.size):
@@ -60,6 +64,7 @@ class MinMax:
         # if state is not terminal: switch player & compute successors
         if level == 0 or self.game.move_was_winning_move(state, player):
             self.nodeUtilDict[node] = self.game.evaluation(state, player)
+
         else:
             player *= -1
             if self.game_name is 'ttt':
@@ -80,9 +85,11 @@ class MinMax:
         node = 0
         self.nodeDict[node] = self.state
         state, player, level = self.state, self.player, self.level
+        # print(state)
         self.build_tree(state, player, node, level)
-        # as here 'player' is actually our opponent, we want his min
+
         mmv = self.min_node_util(node)
+
         # for succ in self.nodeSuccDict[node]:
         #    if self.nodeMinMaxDict[succ] is mmv:
         #        return self.nodeDict[succ]
