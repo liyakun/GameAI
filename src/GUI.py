@@ -89,7 +89,6 @@ class GUI:
         self.drawGameState()
         self.master.update() # Rerender window
 
-        self._updateCurrentPlayer()
 
     def _updateCurrentPlayer(self):
         self.game.update_player()
@@ -153,7 +152,6 @@ class GUI:
 
     def _newGameButtonOptimized(self):
         self.newGame(p1type='random', p2type='minmax')
-        #self.newGame(p1type='random', p2type='heuristic')
         self.game_loop()
 
 root = Tk()

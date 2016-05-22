@@ -1,6 +1,7 @@
 import numpy as np
 import os, random
 from min_max_class import MinMax
+import sys
 
 class Helper:
     @staticmethod
@@ -89,8 +90,12 @@ class Player:
             assert(False)
 
     def move_minmax(self, S):
-        minmax = MinMax(Helper, 'connect_four', -1*self.id, 2, S)
-        S = minmax.run_min_max()
+        minmax = MinMax(Helper, 'connect_four', (-1)*self.id, 3, S)
+        S_temp = minmax.run_min_max()
+        subtracted = np.subtract(S_temp, S)
+        np.nonzero( subtracted )
+        S[np.nonzero( subtracted )] = self.id
+
 
     def move_heuristic(self, S):
         depth=1
@@ -170,7 +175,7 @@ class ConnectFour:
         return 0 in S[0]
 
     def drop(self, c=None):  # Drop a disc into a column
-        if self.player == -1:
+        if self.player == (1):
             self.p1.move(self.gameState, c)
         else:
             self.p2.move(self.gameState, c)

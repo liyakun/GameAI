@@ -83,10 +83,10 @@ class MinMax:
         self.build_tree(state, player, node, level)
         # as here 'player' is actually our opponent, we want his min
         mmv = self.min_node_util(node)
-        #for succ in self.nodeSuccDict[node]:
+        # for succ in self.nodeSuccDict[node]:
         #    if self.nodeMinMaxDict[succ] is mmv:
-        #        return self.Nodedict[succ], mmv
-        return next(self.nodeDict[succ] for succ in self.nodeSuccDict[node] if self.nodeMinMaxDict[succ] is mmv), mmv
+        #        return self.nodeDict[succ]
+        return next(self.nodeDict[succ] for succ in self.nodeSuccDict[node] if self.nodeMinMaxDict[succ] is mmv)
 
 
 if __name__ == '__main__':
