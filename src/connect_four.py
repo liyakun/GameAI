@@ -21,7 +21,7 @@ class Helper:
     def is_valid_move(S, column):
         assert(column >= 0)
         #not sure if we need to check bigger than board size
-        return S[0][column] != 0
+        return S[0][column] == 0
     
     @staticmethod
     def move_was_winning_move(S, p):
@@ -45,6 +45,26 @@ class Helper:
                 return True
 
         return False
+    
+    @staticmethod
+    def make_move(S, player, column):
+        row = np.argmax(np.where(S[:, column] == 0))
+        S[row][column] = player
+    
+    @staticmethod
+    def evaluation(state, player):
+        opponent = player * -1
+        my_fours = Helper.check_for_streak(state, player, 4)
+        my_threes = Helper.check_for_streak(state, player, 3)
+        my_twos = Helper.check_for_streak(state, player, 2)
+        my_ones = Helper.check_for_streak(state, player, 1)
+        opp_fours = Helper.check_for_streak(state, opponent, 4)
+        opp_threes = Helper.check_for_streak(state, opponent, 3)
+        opp_twos = Helper.check_for_streak(state, opponent, 2)
+        if opp_fours > 0:
+            return -100000
+        else:
+            return my_fours * 100000 + my_threes * 100 + my_twos * 10 + my_ones
 
 class Player:
     def __init__(self, id, type='random'):
@@ -70,7 +90,7 @@ class Player:
 
     def move_minmax(self, S):
         minmax = MinMax(Helper, 'connect_four', -1*self.id, 2, S)
-        minmax.run_min_max()
+        S = minmax.run_min_max()
 
     def move_heuristic(self, S):
         depth=1
@@ -108,19 +128,6 @@ class Player:
         return best_move_  # return the column for best move
 
 
-    def evaluation(self, state, player):
-        opponent = player * -1
-        my_fours = Helper.check_for_streak(state, player, 4)
-        my_threes = Helper.check_for_streak(state, player, 3)
-        my_twos = Helper.check_for_streak(state, player, 2)
-        my_ones = Helper.check_for_streak(state, player, 1)
-        opp_fours = Helper.check_for_streak(state, opponent, 4)
-        opp_threes = Helper.check_for_streak(state, opponent, 3)
-        opp_twos = Helper.check_for_streak(state, opponent, 2)
-        if opp_fours > 0:
-            return -100000
-        else:
-            return my_fours * 100000 + my_threes * 100 + my_twos * 10 + my_ones
 
     def search(self, depth, state, player):
         opponent = player * -1
@@ -134,7 +141,7 @@ class Player:
 
         # if this node (state) is a terminal node or depth == 0
         if depth == 0 or len(legal_moves) == 0 or Helper.move_was_winning_move(state, player):
-            return self.evaluation(state, player)  # return the heuristic value of node
+            return Helper.evaluation(state, player)  # return the heuristic value of node
 
         alpha = 99999999
         for child in legal_moves:
@@ -158,24 +165,19 @@ class ConnectFour:
         self.p2 = Player(-1, p2type)
 
 
-    def make_move(self, S, player, column):
-        row = np.argmax(np.where(S[:, column] == 0))
-        S[row][column] = player
 
     def move_still_possible(self, S):
         return 0 in S[0]
 
-    def update_player(self):
-        self.player *= (-1)
-
     def drop(self, c=None):  # Drop a disc into a column
-        if self.player == 1:
+        if self.player == -1:
             self.p1.move(self.gameState, c)
         else:
             self.p2.move(self.gameState, c)
         return True
 
-
+    def update_player(self):
+        self.player = -1*self.player
 
     def search(self, depth, state, player):
         opponent = player * -1
@@ -188,7 +190,7 @@ class ConnectFour:
 
         # if this node (state) is a terminal node or depth == 0
         if depth == 0 or len(legal_moves) == 0 or Helper.move_was_winning_move(state, player):
-            return self.evaluation(state, player)  # return the heuristic value of node
+            return Helper.evaluation(state, player)  # return the heuristic value of node
 
         alpha = 99999999
         for child in legal_moves:
