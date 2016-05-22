@@ -1,5 +1,6 @@
 import numpy as np
 import os, random
+from min_max_class import MinMax
 
 class Helper:
     @staticmethod
@@ -17,10 +18,33 @@ class Helper:
         return ctr
 
     @staticmethod
-    def is_valid_move(self, S, column):
+    def is_valid_move(S, column):
         assert(column >= 0)
         #not sure if we need to check bigger than board size
         return S[0][column] != 0
+    
+    @staticmethod
+    def move_was_winning_move(S, p):
+        # we do not need to check the sign of the largest stroke because we do
+        # the check after our own move and only we can win here
+
+        for r in S:
+            tmp = [len(a) for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0]
+            if len(tmp) > 0 and np.max(tmp) >= 4:
+                return True
+
+        for c in S.T:
+            tmp = [len(a) for a in np.split(c, np.where(np.diff(c) != 0)[0] + 1) if a[0] != 0]
+            if len(tmp) > 0 and np.max(tmp) >= 4:
+                return True
+
+        for k in range(-3,4):
+            d = np.diag(S, k)
+            tmp = [len(a) for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0]
+            if len(tmp) > 0 and np.max(tmp) >= 4:
+                return True
+
+        return False
 
 class Player:
     def __init__(self, id, type='random'):
@@ -45,7 +69,8 @@ class Player:
             assert(False)
 
     def move_minmax(self, S):
-        pass
+        minmax = MinMax(Helper, 'connect_four', -1*self.id, 2, S)
+        minmax.run_min_max()
 
     def move_heuristic(self, S):
         depth=1
@@ -108,7 +133,7 @@ class Player:
                 legal_moves.append(s_copy)
 
         # if this node (state) is a terminal node or depth == 0
-        if depth == 0 or len(legal_moves) == 0 or self.move_was_winning_move(state, player):
+        if depth == 0 or len(legal_moves) == 0 or Helper.move_was_winning_move(state, player):
             return self.evaluation(state, player)  # return the heuristic value of node
 
         alpha = 99999999
@@ -150,27 +175,6 @@ class ConnectFour:
             self.p2.move(self.gameState, c)
         return True
 
-    def move_was_winning_move(self, S, p):
-        # we do not need to check the sign of the largest stroke because we do
-        # the check after our own move and only we can win here
-
-        for r in S:
-            tmp = [len(a) for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0]
-            if len(tmp) > 0 and np.max(tmp) == 4:
-                return True
-
-        for c in S.T:
-            tmp = [len(a) for a in np.split(c, np.where(np.diff(c) != 0)[0] + 1) if a[0] != 0]
-            if len(tmp) > 0 and np.max(tmp) == 4:
-                return True
-
-        for k in range(-3,4):
-            d = np.diag(S, k)
-            tmp = [len(a) for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0]
-            if len(tmp) > 0 and np.max(tmp) == 4:
-                return True
-
-        return False
 
 
     def search(self, depth, state, player):
@@ -183,7 +187,7 @@ class ConnectFour:
                 legal_moves.append(s_copy)
 
         # if this node (state) is a terminal node or depth == 0
-        if depth == 0 or len(legal_moves) == 0 or self.move_was_winning_move(state, player):
+        if depth == 0 or len(legal_moves) == 0 or Helper.move_was_winning_move(state, player):
             return self.evaluation(state, player)  # return the heuristic value of node
 
         alpha = 99999999

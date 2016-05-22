@@ -1,7 +1,7 @@
 from Tkinter import *
 from connect_four import ConnectFour
 from time import sleep
-
+from connect_four import Helper
 
 class GUI:
     elementSize = 80
@@ -102,7 +102,7 @@ class GUI:
     def drawAndCheckForWinning(self):
         self.drawGameState()            
         # evaluate game state
-        if self.game.move_was_winning_move(self.game.gameState, self.game.player):
+        if Helper.move_was_winning_move(self.game.gameState, self.game.player):
             self.game.noWinnerYet = False
             x = self.canvas.winfo_width() // 2
             y = self.canvas.winfo_height() // 2
@@ -120,7 +120,7 @@ class GUI:
 
     def _canvasClick(self, event):
         if not self.game.noWinnerYet: return
-        if self.game.move_was_winning_move(self.game.gameState, self.game.player): return
+        if Helper.move_was_winning_move(self.game.gameState, self.game.player): return
         
         c = event.x // self.elementSize
         if (0 <= c < self.game.size['c']):
@@ -152,7 +152,8 @@ class GUI:
         self.game_loop()
 
     def _newGameButtonOptimized(self):
-        self.newGame(p1type='random', p2type='heuristic')
+        self.newGame(p1type='random', p2type='minmax')
+        #self.newGame(p1type='random', p2type='heuristic')
         self.game_loop()
 
 root = Tk()

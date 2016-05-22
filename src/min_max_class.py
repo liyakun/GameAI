@@ -1,7 +1,6 @@
 import numpy as np
 from games import TicTacToe
-from connect_four import ConnectFour
-
+#from connect_four import ConnectFour
 
 class MinMax:
 
@@ -82,9 +81,14 @@ class MinMax:
         self.nodeDict[node] = self.state
         state, player, level = self.state, self.player, self.level
         self.build_tree(state, player, node, level)
-
+        print(self.state)
+        print(self.level)
+        print(self.player)
+        print(self.node)
         # as here 'player' is actually our opponent, we want his min
         mmv = self.min_node_util(node)
+        for succ in self.nodeSuccDict[node]:
+            print(self.nodeDict[succ])
         return next(self.nodeDict[succ] for succ in self.nodeSuccDict[node] if self.nodeMinMaxDict[succ] is mmv), mmv
 
 
