@@ -3,7 +3,7 @@ import os, random
 
 class Helper:
     @staticmethod
-    def check_for_streak(self, S, p, size):
+    def check_for_streak(S, p, size):
         ctr = 0
         for r in S:
             ctr += sum([1 for a in np.split(r, np.where(np.diff(r) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
@@ -16,6 +16,11 @@ class Helper:
             ctr += sum([1 for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0 and len(a) == size])
         return ctr
 
+    @staticmethod
+    def is_valid_move(self, S, column):
+        assert(column >= 0)
+        #not sure if we need to check bigger than board size
+        return S[0][column] != 0
 
 class Player:
     def __init__(self, id, type='random'):
@@ -33,10 +38,15 @@ class Player:
             self.move_heuristic(S)
         elif self.type == 'manual':
             self.move_manual(S,c)
+        elif self.type == 'minmax':
+            self.move_minmax(S)
         else:
             print('Unknown Player Type')
             assert(False)
-   
+
+    def move_minmax(self, S):
+        pass
+
     def move_heuristic(self, S):
         depth=1
         y = self.best_move(depth, S)
@@ -122,10 +132,6 @@ class ConnectFour:
         self.p1 = Player(1, p1type)
         self.p2 = Player(-1, p2type)
 
-    def is_valid_move(self, S, column):
-        if column < 0 or column >= (self.boardwidth) or S[0][column] != 0:
-            return False
-        return True
 
     def make_move(self, S, player, column):
         row = np.argmax(np.where(S[:, column] == 0))
