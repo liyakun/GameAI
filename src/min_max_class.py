@@ -88,13 +88,13 @@ class MinMax:
         # print(state)
         self.build_tree(state, player, node, level)
 
-        mmv = self.min_node_util(node)
+        mmv = self.max_node_util(node)
 
         # for succ in self.nodeSuccDict[node]:
         #    if self.nodeMinMaxDict[succ] is mmv:
         #        return self.nodeDict[succ]
+        #return next(self.nodeDict[succ] for succ in self.nodeSuccDict[node] if self.nodeMinMaxDict[succ] is mmv), mmv
         return next(self.nodeDict[succ] for succ in self.nodeSuccDict[node] if self.nodeMinMaxDict[succ] is mmv)
-
 
 if __name__ == '__main__':
     ttt = TicTacToe()

@@ -3,6 +3,13 @@ import os, random
 from min_max_class import MinMax
 import sys
 
+evaluationTable = [[3, 4, 5, 7, 5, 4, 3], 
+                                          [4, 6, 8, 10, 8, 6, 4],
+                                          [5, 8, 11, 13, 11, 8, 5], 
+                                          [5, 8, 11, 13, 11, 8, 5],
+                                          [4, 6, 8, 10, 8, 6, 4],
+                                          [3, 4, 5, 7, 5, 4, 3]]
+
 class Helper:
     @staticmethod
     def check_for_streak(S, p, size):
@@ -57,44 +64,18 @@ class Helper:
     def make_move(S, player, column):
         row = np.argmax(np.where(S[:, column] == 0))
         S[row][column] = player
-    
+
+        
     @staticmethod
     def evaluation(state, player):
-        #opponent = player * -1
-        #my_fours = Helper.check_for_streak(state, player, 4)
-        #my_threes = Helper.check_for_streak(state, player, 3)
-        #my_twos = Helper.check_for_streak(state, player, 2)
-        #my_ones = Helper.check_for_streak(state, player, 1)
-        #opp_fours = Helper.check_for_streak(state, opponent, 4)
-        #opp_threes = Helper.check_for_streak(state, opponent, 3)
-        #opp_twos = Helper.check_for_streak(state, opponent, 2)
-
-        #my_fives = Helper.check_for_streak(state, player, 5)
-        #my_sixes = Helper.check_for_streak(state, player, 6)
-        #opp_fives = Helper.check_for_streak(state, opponent, 5)
-        #opp_sixes = Helper.check_for_streak(state, opponent, 6)
-
-        #my_score = (my_fours + my_fives + my_sixes) * 100000 + my_threes * 100 + my_twos * 10 + my_ones
-        #opp_score = (opp_fours + opp_fives + opp_sixes) * 100000 + opp_threes * 100 + opp_twos * 10 
-
-        #if opp_fours > 0 or opp_fives > 0 or opp_sixes > 0:
-        #    return -100000
-       # else:
-        #    return -my_score + opp_score
-        evaluationTable = [[3, 4, 5, 7, 5, 4, 3], 
-                                          [4, 6, 8, 10, 8, 6, 4],
-                                          [5, 8, 11, 13, 11, 8, 5], 
-                                          [5, 8, 11, 13, 11, 8, 5],
-                                          [4, 6, 8, 10, 8, 6, 4],
-                                          [3, 4, 5, 7, 5, 4, 3]]
         utility = 138
         sum = 0
         for i in range(6):
-            for j in range(7):
-                if (state[i][j] == 1):
-                    sum += evaluationTable[i][j]
-                elif (state[i][j] == -1):
-                    sum -= evaluationTable[i][j]
+           for j in range(7):
+               if (state[i][j] == 1):
+                   sum += evaluationTable[i][j]
+               elif (state[i][j] == -1):
+                   sum -= evaluationTable[i][j]
         return utility + sum;
 
 class Player:
@@ -128,7 +109,7 @@ class Player:
 
 
     def move_heuristic(self, S):
-        depth=1
+        depth=2
         y = self.best_move(depth, S)
         x = np.argmax(np.where(S[:, y] == 0))
         S[x, y] = self.id
