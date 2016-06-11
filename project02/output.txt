@@ -1,0 +1,15 @@
+Number of nodes: 549946
+Number of draw: 46080
+Number of x: 131184
+Number of o: 77904
+Number of nodes in branch 1: 9
+Number of nodes in branch 2: 72
+Number of nodes in branch 3: 504
+Number of nodes in branch 4: 3024
+Number of nodes in branch 5: 15120
+Number of nodes in branch 6: 54720
+Number of nodes in branch 7: 148176
+Number of nodes in branch 8: 200448
+Number of nodes in branch 9: 127872
+Number of nodes in branch 10: 0
+Average number of branch nodes: 61105
