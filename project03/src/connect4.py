@@ -1,14 +1,78 @@
 import time
 import numpy as np
 from min_max_class import MinMax
+import matplotlib.pyplot as plt
 
 
-evaluationTable = [[3, 4, 5, 7, 5, 4, 3], 
-                                          [4, 6, 8, 10, 8, 6, 4],
-                                          [5, 8, 11, 13, 11, 8, 5], 
-                                          [5, 8, 11, 13, 11, 8, 5],
-                                          [4, 6, 8, 10, 8, 6, 4],
-                                          [3, 4, 5, 7, 5, 4, 3]]
+class EvaluationTable:
+
+    def __init__(self, columns=7, rows=6):
+        self.columns, self.rows = columns, rows
+        self.evaluationTable = [[0 for col in range(self.columns)] for row in range(self.rows)]
+
+    def vertical_check(self):
+        for j in range(self.rows):
+                if j+3 < self.rows:
+                    for i in range(4):
+                        for index, item in enumerate(self.evaluationTable[j+i]):
+                            self.evaluationTable[j+i][index] += 1
+                else:
+                    break
+
+    def horizontal_check(self):
+        for j in range(self.columns):
+                if j+3 < self.columns:
+                    for i in range(4):
+                        for row in self.evaluationTable:
+                            row[j+i] += 1
+                else:
+                    break
+
+    def diagonal_check(self):
+        for row in range(self.rows):
+            if row + 3 < self.rows:
+                # check for diagonals with positive slope
+                for col in range(self.columns):
+                    if col + 3 < self.columns:
+                        for i in range(4):
+                            self.evaluationTable[row+i][col+i] += 1
+                    else:
+                        break
+                # check for diagonals with negative slope
+                for col in range(self.columns-1, -1, -1):
+                    if col - 3 >= 0:
+                        for i in range(4):
+                            self.evaluationTable[row+i][col-i] += 1
+                    else:
+                        break
+
+    def color_map(self):
+        fig = plt.figure(figsize=(6, 3.2))
+
+        ax = fig.add_subplot(111)
+        ax.set_title('Board ')
+        plt.imshow(np.array(self.evaluationTable))
+        ax.set_aspect('equal')
+
+        cax = fig.add_axes([0.12, 0.1, 0.78, 0.8])
+        cax.get_xaxis().set_visible(False)
+        cax.get_yaxis().set_visible(False)
+        cax.patch.set_alpha(0)
+        cax.set_frame_on(False)
+        plt.colorbar(orientation='vertical')
+        plt.show()
+
+    def evaluate_board(self):
+        self.vertical_check()
+        self.horizontal_check()
+        self.diagonal_check()
+        return self.evaluationTable
+
+evaluate = EvaluationTable(19, 19)
+evaluationTable = evaluate.evaluate_board()
+for row in evaluationTable:
+    print row
+evaluate.color_map()
 
 
 class ConnectFour:
@@ -60,7 +124,7 @@ class ConnectFour:
             if len(tmp) > 0 and np.max(tmp) >= 4:
                 return True
 
-        for k in range(-3,4):
+        for k in range(-3, 4):
             d = np.diag(S, k)
             tmp = [len(a) for a in np.split(d, np.where(np.diff(d) != 0)[0] + 1) if a[0] != 0]
             if len(tmp) > 0 and np.max(tmp) >= 4:
@@ -83,7 +147,7 @@ class ConnectFour:
 
     def move_min_max(self, S, p, depth):
         minmax = MinMax(ConnectFour(), 'connect_four', p * -1, depth, S)
-        new_state, score = minmax.run_min_max()
+        new_state = minmax.run_min_max()
         return new_state
 
     def evaluation(self, state, player):
@@ -116,7 +180,7 @@ class ConnectFour:
             # get player symbol
             name = self.symbols[player]
             if player == 1:
-                game_state = self.move_min_max(game_state, player, 3)
+                game_state = self.move_min_max(game_state, player, 2)
             else:
                 game_state = self.move_at_random(game_state, player)
 
@@ -144,5 +208,5 @@ class ConnectFour:
         
 if __name__ == '__main__':
     start_time = time.time()
-    ConnectFour().run(50)
+    ConnectFour(19, 19).run(1)
     print("--- %s seconds ---" % (time.time() - start_time))
