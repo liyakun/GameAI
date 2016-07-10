@@ -2,6 +2,7 @@ import time
 import numpy as np
 from min_max_class import MinMax
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 
 class EvaluationTable:
@@ -46,12 +47,12 @@ class EvaluationTable:
                     else:
                         break
 
-    def color_map(self):
+    def color_map(self, map):
         fig = plt.figure(figsize=(6, 3.2))
 
         ax = fig.add_subplot(111)
         ax.set_title('Board ')
-        plt.imshow(np.array(self.evaluationTable))
+        plt.imshow(map)
         ax.set_aspect('equal')
 
         cax = fig.add_axes([0.12, 0.1, 0.78, 0.8])
@@ -68,11 +69,15 @@ class EvaluationTable:
         self.diagonal_check()
         return self.evaluationTable
 
-evaluate = EvaluationTable(19, 19)
+evaluate = EvaluationTable()
 evaluationTable = evaluate.evaluate_board()
-for row in evaluationTable:
-    print row
-evaluate.color_map()
+#for row in evaluationTable:
+#    print row
+#evaluate.color_map(evaluate.evaluationTable)
+
+#evaluationTable = [[3, 4, 5, 7, 5, 4, 3], [4, 6, 8, 10, 8, 6, 4], [5, 8, 11, 13, 11, 8, 5], [5, 8, 11, 13, 11, 8, 5],
+#                   [4, 6, 8, 10, 8, 6, 4], [3, 4, 5, 7, 5, 4, 3]]
+#evaluate.color_map(np.array(oldTable))
 
 
 class ConnectFour:
@@ -85,6 +90,67 @@ class ConnectFour:
         self.noWinnerYet = True
         self.symbols = {1: 'x', -1: 'o', 0: ' '}
         self.boardwidth = columns
+
+    def box_plot_with_special_point(self, equal_list, equal_special_list, str_):
+        fig1 = plt.figure()
+        ax = fig1.add_subplot(111)
+        # plt.subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
+        meanlineprops = dict(linestyle='--', linewidth=2.5, color='purple')
+
+        # get all the variance value w.r.t equal_list(random_list)
+        randomDists = ['depth 2', 'depth 3', 'depth 4']
+
+        y = np.transpose(np.array(equal_list)).mean(axis=0)
+        x = np.array([i + 1 for i in range(y.size)])
+        plt.plot(x, y, 'b-')
+        bp_0 = ax.boxplot(equal_list, 1, meanprops=meanlineprops, meanline=True, showmeans=True)
+
+        # Remove top axes and right axes ticks
+        ax.get_xaxis().tick_bottom()
+        ax.get_yaxis().tick_left()
+
+        # Add a horizontal grid to the plot, but make it very light in color
+        # so we can use it for reading data values but not be distracting
+        ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+
+        # Hide these grid behind plot objects
+        ax.set_axisbelow(True)
+
+        # add xtick name with variance value
+        xticksNames = plt.setp(ax, xticklabels=np.repeat(randomDists, 1))
+        plt.setp(xticksNames, fontsize=12)
+
+        # change outline color, fill color and linewidth of the boxes
+        for box in bp_0['boxes']:
+            # change outline color
+            box.set(color='#7570b3', linewidth=1)
+
+        # change color and linewidth of the whiskers
+        for whisker in bp_0['whiskers']:
+            whisker.set(color='#7570b3', linewidth=2)
+
+        # change color and linewidth of the caps
+        for cap in bp_0['caps']:
+            cap.set(color='#7570b3', linewidth=2)
+
+        # change color and linewidth of the medians
+        for i, median in enumerate(bp_0['medians']):
+            if i == 0:
+                median.set(color='#b2df8a', linewidth=2, label="median")
+            else:
+                median.set(color='#b2df8a', linewidth=2)
+
+        dash_line = mlines.Line2D([], [], color='purple', label='mean', linestyle='--')
+        median_line = mlines.Line2D([], [], color='#b2df8a', label='median', linestyle='-')
+        ax.set_xlabel('Depth')
+        ax.set_ylabel('Wining Frequency')
+        ax.set_ylim([35, 55])
+        # Put a legend below current axis
+        f1 = plt.legend(handles=[dash_line, median_line], loc=2, prop={'size': 10})
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width, box.height])
+        ax = plt.gca().add_artist(f1)
+        plt.show()
 
     def is_valid_move(self, S, column):
         if column < 0 or column >= self.boardwidth or S[0][column] != 0:
@@ -167,7 +233,7 @@ class ConnectFour:
         for n in [-1, 0, 1]:
             B[B == n] = self.symbols[n]
 
-    def execute(self):
+    def execute(self, depth=2):
         # initialize player number, move counter
         player = 1
         mvcntr = 1
@@ -180,7 +246,7 @@ class ConnectFour:
             # get player symbol
             name = self.symbols[player]
             if player == 1:
-                game_state = self.move_min_max(game_state, player, 2)
+                game_state = self.move_min_max(game_state, player, depth)
             else:
                 game_state = self.move_at_random(game_state, player)
 
@@ -198,15 +264,28 @@ class ConnectFour:
 
         return result
 
-    def run(self, times):
+    def run(self, times, depth=2):
         result = []
         for i in range(times):
-            print '%i running' % i
-            result.append(self.execute())
+            result.append(self.execute(depth))
 
         print 'x win: %i, o win: %i, draw: %i' % (result.count(1), result.count(-1), result.count(0))
-        
+        return result.count(1)
+
+    def experiment(self, times, running, depth):
+        result_all = []
+        #time_all = []
+        for i in range(times):
+            start_time = time.time()
+            result_all.append(self.run(running, depth))
+            #self.run(running, depth)
+            #time_all.append(time.time() - start_time)
+            print("--- %s seconds ---" % (time.time() - start_time))
+        return result_all
+
 if __name__ == '__main__':
-    start_time = time.time()
-    ConnectFour(19, 19).run(1)
-    print("--- %s seconds ---" % (time.time() - start_time))
+    time2 = ConnectFour().experiment(5, 50, 2)
+    time3 = ConnectFour().experiment(5, 50, 3)
+    time4 = ConnectFour().experiment(5, 50, 4)
+    ConnectFour().box_plot_with_special_point([time2, time3, time4], [], '')
+
