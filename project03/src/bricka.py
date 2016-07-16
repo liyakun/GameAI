@@ -42,6 +42,7 @@ STATE_GAME_OVER = 3
 SPEED = 4
 
 PADDLE_SPEED = SPEED/4
+MIN_PADDLE_STEP = 5
 
 class Bricka:
 
@@ -69,9 +70,9 @@ class Bricka:
         self.dist_to_ball_md = fuzz.trimf(self.x_distance_to_ball, [0, SCREEN_SIZE[0]/2, SCREEN_SIZE[0]] )
         self.dist_to_ball_hi = fuzz.trimf(self.x_distance_to_ball, [10, SCREEN_SIZE[0], SCREEN_SIZE[0]] )
 
-        self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 0, 20] )
-        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [0, 20, 40] )
-        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [40, 60, 60] )
+        self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 0, 2] )
+        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [0, 2, 4] )
+        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [4, 10, 10] )
 
 
         if pygame.font:
@@ -227,8 +228,8 @@ class Bricka:
 
                 aggregated = np.fmax(activation_lo, np.fmax(activation_md, activation_hi))
                 # Calculate defuzzified result
-                movement = fuzz.defuzz(self.paddle_movement, aggregated, 'centroid')
-
+                speed = fuzz.defuzz(self.paddle_movement, aggregated, 'centroid')
+                PADDLE_SPEED = speed
 
                 # --- UNCOMMENT TO VISULIZE RULES and how they fire -----
                 # fig, ax0 = plt.subplots(figsize=(8, 3))
@@ -246,9 +247,9 @@ class Bricka:
                 # plt.show()
 
                 if( (intersection_point+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) ) < 0 ):
-                    self.paddle.left -= movement
+                    self.paddle.left -= MIN_PADDLE_STEP * PADDLE_SPEED
                 else:
-                    self.paddle.left += movement
+                    self.paddle.left += MIN_PADDLE_STEP * PADDLE_SPEED
 
 
             self.clock.tick(10)
