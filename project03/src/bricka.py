@@ -39,9 +39,9 @@ STATE_BALL_IN_PADDLE = 0
 STATE_PLAYING = 1
 STATE_WON = 2
 STATE_GAME_OVER = 3
-SPEED = 2
+SPEED = 4
 
-PADDLE_SPEED = 2
+PADDLE_SPEED = SPEED/4
 
 class Bricka:
 
@@ -86,7 +86,7 @@ class Bricka:
         self.score = 0
         self.state = STATE_BALL_IN_PADDLE
 
-        self.paddle   = pygame.Rect(300,PADDLE_Y,PADDLE_WIDTH,PADDLE_HEIGHT)
+        self.paddle   = pygame.Rect(0,PADDLE_Y,PADDLE_WIDTH,PADDLE_HEIGHT)
         self.ball     = pygame.Rect(300,PADDLE_Y - BALL_DIAMETER,BALL_DIAMETER,BALL_DIAMETER)
 
         self.ball_vel = [5,-5]
@@ -178,34 +178,59 @@ class Bricka:
             y = (SCREEN_SIZE[1] - size[1]) / 2
             self.screen.blit(font_surface, (x,y))
 
+
+    def get_intersection_point(self, ball, ball_vel):
+
+        top = SCREEN_SIZE[1] - ball.top
+        right = SCREEN_SIZE[0] - ball.left
+        if( ball_vel[0] > 0 and ball_vel[1] > 0 ): # we move right down
+            if( right < top ): # bounding case
+                bouncing_pose_y = top - right
+                return SCREEN_SIZE[0] - bouncing_pose_y
+            else:
+                return ball.left + top
+
+
+        if( ball_vel[0] < 0 and ball_vel[1] > 0 ): # we move left down
+            if( ball.left < top ):
+                bouncing_pose_y = top - ball.left
+                return bouncing_pose_y
+            else:
+                return ball.left - top
+        else:
+            return SCREEN_SIZE[0]//2
+
+
     def run(self):
         while 1:            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit
 
+            # distance_to_the_ball = abs(self.ball.left+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) )
 
-            # print( abs(self.ball.left - self.paddle.left + 30 ) )
+            intersection_point = self.get_intersection_point(self.ball, self.ball_vel)
 
-            # print(self.ball.left - self.paddle.left)
-            
+            # print(intersection_point)
+
+            distance_to_the_intesection_point = abs(intersection_point+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) )
+
             # APPLY FUZZY LOGIC TO MOVE THE PADDLE
             if( self.state == STATE_PLAYING ):
-                x_level_lo = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_lo, abs(self.ball.left+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) ) ) #abs( self.ball.left - self.paddle.left + 31) 
-                x_level_md = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_md, abs(self.ball.left+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) ) )
-                x_level_hi = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_hi, abs(self.ball.left+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) ) )
+                x_level_lo = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_lo, distance_to_the_intesection_point )
+                x_level_md = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_md, distance_to_the_intesection_point )
+                x_level_hi = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_hi, distance_to_the_intesection_point )
 
                 activation_lo = np.fmin(x_level_lo, self.paddle_movement_lo)
                 activation_md = np.fmin(x_level_md, self.paddle_movement_md)
                 activation_hi = np.fmin(x_level_hi, self.paddle_movement_hi)
 
                 aggregated = np.fmax(activation_lo, np.fmax(activation_md, activation_hi))
-
                 # Calculate defuzzified result
                 movement = fuzz.defuzz(self.paddle_movement, aggregated, 'centroid')
 
-                # --- UNCOMMENT TO VISULIZE RULES and how they fire -----
 
+                # --- UNCOMMENT TO VISULIZE RULES and how they fire -----
                 # fig, ax0 = plt.subplots(figsize=(8, 3))
                 # tip0 = np.zeros_like(self.paddle_movement)
                 # ax0.fill_between(self.paddle_movement, tip0, activation_lo, facecolor='b', alpha=0.7)
@@ -220,7 +245,7 @@ class Bricka:
                 # plt.tight_layout()
                 # plt.show()
 
-                if( (self.ball.left+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) ) < 0 ):
+                if( (intersection_point+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) ) < 0 ):
                     self.paddle.left -= movement
                 else:
                     self.paddle.left += movement
@@ -242,19 +267,12 @@ class Bricka:
             elif self.state == STATE_WON:
                 self.show_message("YOU WON! PRESS ENTER TO PLAY AGAIN")
               
-
-
-
             self.draw_bricks()
-
             # Draw paddle
             pygame.draw.rect(self.screen, BLUE, self.paddle)
-
             # Draw ball
             pygame.draw.circle(self.screen, WHITE, (self.ball.left + BALL_RADIUS, self.ball.top + BALL_RADIUS), BALL_RADIUS)
-
             self.show_stats()
-
             pygame.display.flip()
 
 if __name__ == "__main__":
