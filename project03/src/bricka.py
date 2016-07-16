@@ -39,10 +39,10 @@ STATE_BALL_IN_PADDLE = 0
 STATE_PLAYING = 1
 STATE_WON = 2
 STATE_GAME_OVER = 3
-SPEED = 4
+SPEED = 40
 
 PADDLE_SPEED = SPEED/4
-MIN_PADDLE_STEP = 5
+MIN_PADDLE_STEP = 1
 
 class Bricka:
 
@@ -54,25 +54,20 @@ class Bricka:
         
         self.clock = pygame.time.Clock()
 
+        MAX_PADDLE_MOVEMENT = 100
+
         self.x_distance_to_ball = np.arange(0, SCREEN_SIZE[0], 1)
-        # y_distance_to_ball = np.arange(0, SCREEN_SIZE[1], 1)
-        self.paddle_movement = np.arange(0, SCREEN_SIZE[0], 1)
-
-        # self.dist_to_ball_lo = fuzz.trimf(self.x_distance_to_ball, [0, 0, 50] )
-        # self.dist_to_ball_md = fuzz.trimf(self.x_distance_to_ball, [0, 200, 200 )
-        # self.dist_to_ball_hi = fuzz.trimf(self.x_distance_to_ball, [200, , SCREEN_SIZE[0]] )
-
-        # self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 0, 300])
-        # self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [0, SCREEN_SIZE[0]/2, SCREEN_SIZE[0]] )
-        # self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [SCREEN_SIZE[0]/2, SCREEN_SIZE[0], SCREEN_SIZE[0]] )
+        self.paddle_movement = np.arange(0, MAX_PADDLE_MOVEMENT, 1)
 
         self.dist_to_ball_lo = fuzz.trimf(self.x_distance_to_ball, [0, 0, 100] )
         self.dist_to_ball_md = fuzz.trimf(self.x_distance_to_ball, [0, SCREEN_SIZE[0]/2, SCREEN_SIZE[0]] )
         self.dist_to_ball_hi = fuzz.trimf(self.x_distance_to_ball, [10, SCREEN_SIZE[0], SCREEN_SIZE[0]] )
 
         self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 0, 2] )
-        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [0, 2, 4] )
-        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [4, 10, 10] )
+        self.paddle_movement_semi_lo = fuzz.trimf(self.paddle_movement, [0, 2, 4] )
+        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [2, 4, 6] )
+        self.paddle_movement_semi_high = fuzz.trimf(self.paddle_movement, [4, 7, 10] )
+        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [7, MAX_PADDLE_MOVEMENT, MAX_PADDLE_MOVEMENT] )
 
 
         if pygame.font:
@@ -90,7 +85,7 @@ class Bricka:
         self.paddle   = pygame.Rect(0,PADDLE_Y,PADDLE_WIDTH,PADDLE_HEIGHT)
         self.ball     = pygame.Rect(300,PADDLE_Y - BALL_DIAMETER,BALL_DIAMETER,BALL_DIAMETER)
 
-        self.ball_vel = [5,-5]
+        self.ball_vel = [1,-1]
 
         self.create_bricks()
 
@@ -112,17 +107,17 @@ class Bricka:
         keys = pygame.key.get_pressed()
         
         if keys[pygame.K_LEFT]:
-            self.paddle.left -= 5 * PADDLE_SPEED
+            self.paddle.left -= MIN_PADDLE_STEP * PADDLE_SPEED
             if self.paddle.left < 0:
                 self.paddle.left = 0
 
         if keys[pygame.K_RIGHT]:
-            self.paddle.left += 5 * PADDLE_SPEED
+            self.paddle.left += MIN_PADDLE_STEP * PADDLE_SPEED
             if self.paddle.left > MAX_PADDLE_X:
                 self.paddle.left = MAX_PADDLE_X
 
         if keys[pygame.K_SPACE] and self.state == STATE_BALL_IN_PADDLE:
-            self.ball_vel = [5,-5]
+            self.ball_vel = [1,-1]
             self.state = STATE_PLAYING
         elif keys[pygame.K_RETURN] and (self.state == STATE_GAME_OVER or self.state == STATE_WON):
             self.init_game()
@@ -222,9 +217,16 @@ class Bricka:
                 x_level_md = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_md, distance_to_the_intesection_point )
                 x_level_hi = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_hi, distance_to_the_intesection_point )
 
-                activation_lo = np.fmin(x_level_lo, self.paddle_movement_lo)
+
+                active_rule1 = np.fmax(self.paddle_movement_lo, self.paddle_movement_semi_lo)
+                # active_rule2 = np.fmax(self.paddle_movement_md)
+                active_rule3 = np.fmax(self.paddle_movement_semi_high, self.paddle_movement_hi)
+
+                # activation_lo = np.fmin(x_level_lo, self.paddle_movement_lo)
+                activation_lo = np.fmin(x_level_lo, active_rule1)
                 activation_md = np.fmin(x_level_md, self.paddle_movement_md)
-                activation_hi = np.fmin(x_level_hi, self.paddle_movement_hi)
+                activation_hi = np.fmin(x_level_hi, active_rule3)
+                # activation_hi = np.fmin(x_level_hi, self.paddle_movement_hi)
 
                 aggregated = np.fmax(activation_lo, np.fmax(activation_md, activation_hi))
                 # Calculate defuzzified result
@@ -232,15 +234,16 @@ class Bricka:
                 PADDLE_SPEED = speed
 
                 # --- UNCOMMENT TO VISULIZE RULES and how they fire -----
+
                 # fig, ax0 = plt.subplots(figsize=(8, 3))
                 # tip0 = np.zeros_like(self.paddle_movement)
                 # ax0.fill_between(self.paddle_movement, tip0, activation_lo, facecolor='b', alpha=0.7)
-                # ax0.plot(self.paddle_movement, self.paddle_movement_lo, 'b', linewidth=0.5, linestyle='--', )
+                # ax0.plot(self.paddle_movement, active_rule1, 'b', linewidth=0.5, linestyle='--', )
                 # ax0.fill_between(self.paddle_movement, tip0, activation_md, facecolor='g', alpha=0.7)
                 # ax0.plot(self.paddle_movement, self.paddle_movement_md, 'g', linewidth=0.5, linestyle='--')
                 # ax0.fill_between(self.paddle_movement, tip0, activation_hi, facecolor='r', alpha=0.7)
-                # ax0.plot(self.paddle_movement, self.paddle_movement_hi, 'r', linewidth=0.5, linestyle='--')
-                # ax0.plot([movement, movement], [0, 1], 'k', linewidth=1.5, alpha=0.9)
+                # ax0.plot(self.paddle_movement, active_rule3, 'r', linewidth=0.5, linestyle='--')
+                # ax0.plot([speed, speed], [0, 1], 'k', linewidth=1.5, alpha=0.9)
                 # ax0.set_title('Output membership activity')
 
                 # plt.tight_layout()
