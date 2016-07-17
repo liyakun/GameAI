@@ -54,20 +54,32 @@ class Bricka:
         
         self.clock = pygame.time.Clock()
 
-        MAX_PADDLE_MOVEMENT = 100
-
+        MAX_PADDLE_MOVEMENT = 300
+        
+        # generate universe variables
+        # 1. x distance from paddle to ball
         self.x_distance_to_ball = np.arange(0, SCREEN_SIZE[0], 1)
+        # 2. movement range of paddle
         self.paddle_movement = np.arange(0, MAX_PADDLE_MOVEMENT, 1)
+        
+        window_width = SCREEN_SIZE[0]
+        # low: from 0 to window_width/8, and when self.x_distance_to_ball=0 lowest
+        self.dist_to_ball_lo = fuzz.trimf(self.x_distance_to_ball, [0, 0, window_width/8] )
+        # semi low: from 0 to window_width/4, and when self.x_distance_to_ball=0 lowest
+        self.dist_to_ball_semi_lo = fuzz.trimf(self.x_distance_to_ball, [0, window_width/4, window_width/2] )
+        # medium: from 0 to SCREEN_SIZE[0], and when self.x_distance_to_ball=SCREEN_SIZE[0]/2 most medium
+        self.dist_to_ball_md = fuzz.trimf(self.x_distance_to_ball, [window_width/4, window_width/2, 3*window_width/4] )
+        # semi high: from window_width/2 to window_width, and when self.x_distance_to_ball=3*window_width/4, highest
+        self.dist_to_ball_semi_hi = fuzz.trimf(self.x_distance_to_ball, [window_width/2, 3*window_width/4, window_width] )
+        # high: from 10 to SCREEN_SIZE[0], and when self.x_distance_to_ball=SCREEN_SIZE[0], highest
+        self.dist_to_ball_hi = fuzz.trimf(self.x_distance_to_ball, [3*window_width/4, window_width, window_width] )
 
-        self.dist_to_ball_lo = fuzz.trimf(self.x_distance_to_ball, [0, 0, 100] )
-        self.dist_to_ball_md = fuzz.trimf(self.x_distance_to_ball, [0, SCREEN_SIZE[0]/2, SCREEN_SIZE[0]] )
-        self.dist_to_ball_hi = fuzz.trimf(self.x_distance_to_ball, [10, SCREEN_SIZE[0], SCREEN_SIZE[0]] )
-
-        self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 0, 2] )
-        self.paddle_movement_semi_lo = fuzz.trimf(self.paddle_movement, [0, 2, 4] )
-        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [2, 8, 14] )
-        self.paddle_movement_semi_high = fuzz.trimf(self.paddle_movement, [8, 20, 32] )
-        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [20, MAX_PADDLE_MOVEMENT, MAX_PADDLE_MOVEMENT] )
+        # paddle movement control with distance of movement unit
+        self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 20, 40] )
+#self.paddle_movement_semi_lo = fuzz.trimf(self.paddle_movement, [0, 2, 4] )
+        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [20, 40, 60] )
+#       self.paddle_movement_semi_high = fuzz.trimf(self.paddle_movement, [8, 20, 32] )
+        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [40, MAX_PADDLE_MOVEMENT, MAX_PADDLE_MOVEMENT] )
 
 
         if pygame.font:
@@ -82,8 +94,8 @@ class Bricka:
         self.score = 0
         self.state = STATE_BALL_IN_PADDLE
 
-        self.paddle   = pygame.Rect(0,PADDLE_Y,PADDLE_WIDTH,PADDLE_HEIGHT)
-        self.ball     = pygame.Rect(300,PADDLE_Y - BALL_DIAMETER,BALL_DIAMETER,BALL_DIAMETER)
+        self.paddle = pygame.Rect(0, PADDLE_Y, PADDLE_WIDTH, PADDLE_HEIGHT)
+        self.ball   = pygame.Rect(300, PADDLE_Y - BALL_DIAMETER, BALL_DIAMETER, BALL_DIAMETER)
 
         self.ball_vel = [1,-1]
 
@@ -123,16 +135,17 @@ class Bricka:
             self.init_game()
 
     def move_ball(self):
-        self.ball.left += SPEED*self.ball_vel[0]
-        self.ball.top  += SPEED*self.ball_vel[1]
+        # generally move ball from current position with default direction multiply with speed
+        self.ball.left += SPEED * self.ball_vel[0]
+        self.ball.top  += SPEED * self.ball_vel[1]
 
+        # when ball move to the border of the screen, then reset x, y coordinate, and direction of movement
         if self.ball.left <= 0:
             self.ball.left = 0
             self.ball_vel[0] = -self.ball_vel[0]
         elif self.ball.left >= MAX_BALL_X:
             self.ball.left = MAX_BALL_X
-            self.ball_vel[0] = -self.ball_vel[0]
-        
+            self.ball_vel[0] = -self.ball_vel[0] 
         if self.ball.top < 0:
             self.ball.top = 0
             self.ball_vel[1] = -self.ball_vel[1]
@@ -141,19 +154,21 @@ class Bricka:
             self.ball_vel[1] = -self.ball_vel[1]
 
     def handle_collisions(self):
+        # if ball hit any brick, change ball velocity and remove brick
         for brick in self.bricks:
             if self.ball.colliderect(brick):
                 self.score += 3
                 self.ball_vel[1] = -self.ball_vel[1]
                 self.bricks.remove(brick)
                 break
-
+        # if no brick left, then win game
         if len(self.bricks) == 0:
             self.state = STATE_WON
-            
+        # if ball hit paddle, change y coordinate and velocity of ball
         if self.ball.colliderect(self.paddle):
             self.ball.top = PADDLE_Y - BALL_DIAMETER
             self.ball_vel[1] = -self.ball_vel[1]
+        # if ball.top is below the paddle.top, then fail game once
         elif self.ball.top > self.paddle.top:
             self.lives -= 1
             if self.lives > 0:
@@ -166,7 +181,7 @@ class Bricka:
             font_surface = self.font.render("SCORE: " + str(self.score) + " LIVES: " + str(self.lives), False, WHITE)
             self.screen.blit(font_surface, (205,5))
 
-    def show_message(self,message):
+    def show_message(self, message):
         if self.font:
             size = self.font.size(message)
             font_surface = self.font.render(message,False, WHITE)
@@ -174,21 +189,28 @@ class Bricka:
             y = (SCREEN_SIZE[1] - size[1]) / 2
             self.screen.blit(font_surface, (x,y))
 
-
     def get_intersection_point(self, ball, ball_vel):
-
-        top = SCREEN_SIZE[1] - ball.top
+        '''
+        get the intersection point when the ball is going to hit screen border
+        1. hit on the right border, with ball_vel[0] > 0
+        2. hit on the left border, with ball_vel[0] < 0    
+        3. move down, with ball_vel[1] > 0
+        4. move up, with ball_vel[1] < 0
+        '''
+        # ball distance w.r.t the screen bottom
+        top = SCREEN_SIZE[1] - ball.top 
+        # ball distance w.r.t the right border 
         right = SCREEN_SIZE[0] - ball.left
-        if( ball_vel[0] > 0 and ball_vel[1] > 0 ): # we move right down
-            if( right < top ): # bounding case
+        # we move right down
+        if ball_vel[0] > 0 and ball_vel[1] > 0: 
+            if right < top : # bouncing case when distance to right border is smaller than distance to bottom border
                 bouncing_pose_y = top - right
                 return SCREEN_SIZE[0] - bouncing_pose_y
             else:
                 return ball.left + top
-
-
-        if( ball_vel[0] < 0 and ball_vel[1] > 0 ): # we move left down
-            if( ball.left < top ):
+        # we move left down
+        elif ball_vel[0] < 0 and ball_vel[1] > 0:
+            if ball.left < top: # bouncing case when distance to left border less than distance to bottom border
                 bouncing_pose_y = top - ball.left
                 return bouncing_pose_y
             else:
@@ -204,31 +226,38 @@ class Bricka:
                     sys.exit
 
             # distance_to_the_ball = abs(self.ball.left+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) )
-
+            # get the intersection point when the ball move down
             intersection_point = self.get_intersection_point(self.ball, self.ball_vel)
-
-            # print(intersection_point)
-
-            distance_to_the_intesection_point = abs(intersection_point+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) )
+            # get the distance to the intersection_point, w.r.t paddle center_x, and ball center_x
+            distance_to_the_intesection_point = abs(intersection_point + BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH / 2))
 
             # APPLY FUZZY LOGIC TO MOVE THE PADDLE
-            if( self.state == STATE_PLAYING ):
-                x_level_lo = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_lo, distance_to_the_intesection_point )
-                x_level_md = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_md, distance_to_the_intesection_point )
-                x_level_hi = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_hi, distance_to_the_intesection_point )
+            if self.state == STATE_PLAYING:
+                
+                # Calculate how much percent we are in low, medium and high w.r.t the distance to the intersection point
+                x_level_lo = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_lo, distance_to_the_intesection_point)
+                x_level_semi_lo = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_semi_lo, distance_to_the_intesection_point)
+                x_level_md = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_md, distance_to_the_intesection_point)
+                x_level_semi_hi = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_semi_hi, distance_to_the_intesection_point)
+                x_level_hi = fuzz.interp_membership(self.x_distance_to_ball, self.dist_to_ball_hi, distance_to_the_intesection_point)
+                
+                rule1 = np.fmax(x_level_lo, x_level_semi_lo)
+                rule2 = np.fmax(x_level_semi_hi, x_level_hi)
+                # paddle movement is low or semi_lo
+                # active_rule1 = np.fmax(self.paddle_movement_lo, self.paddle_movement_semi_lo)
+                # paddle movement is high or semi_high
+                # active_rule3 = np.fmax(self.paddle_movement_semi_high, self.paddle_movement_hi) 
+                # activate rule 1 and rule 3
+                activation_lo = np.fmin(self.paddle_movement_lo, rule1)
+                activation_md = np.fmin(self.paddle_movement_md, x_level_md)
+                activation_hi = np.fmin(self.paddle_movement_hi, rule2)
+                # activation_lo = np.fmin(x_level_lo, active_rule1)
+                # activation_hi = np.fmin(x_level_hi, active_rule3)
+                # activate paddle movement medium
 
-
-                active_rule1 = np.fmax(self.paddle_movement_lo, self.paddle_movement_semi_lo)
-                # active_rule2 = np.fmax(self.paddle_movement_md)
-                active_rule3 = np.fmax(self.paddle_movement_semi_high, self.paddle_movement_hi)
-
-                # activation_lo = np.fmin(x_level_lo, self.paddle_movement_lo)
-                activation_lo = np.fmin(x_level_lo, active_rule1)
-                activation_md = np.fmin(x_level_md, self.paddle_movement_md)
-                activation_hi = np.fmin(x_level_hi, active_rule3)
-                # activation_hi = np.fmin(x_level_hi, self.paddle_movement_hi)
-
+                # aggregate three rule functions
                 aggregated = np.fmax(activation_lo, np.fmax(activation_md, activation_hi))
+
                 # Calculate defuzzified result
                 speed = fuzz.defuzz(self.paddle_movement, aggregated, 'centroid')
                 PADDLE_SPEED = speed
@@ -249,7 +278,7 @@ class Bricka:
                 # plt.tight_layout()
                 # plt.show()
 
-                if( (intersection_point+BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH /2) ) < 0 ):
+                if intersection_point + BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH / 2) < 0:
                     self.paddle.left -= MIN_PADDLE_STEP * PADDLE_SPEED
                 else:
                     self.paddle.left += MIN_PADDLE_STEP * PADDLE_SPEED
