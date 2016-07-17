@@ -39,7 +39,7 @@ STATE_BALL_IN_PADDLE = 0
 STATE_PLAYING = 1
 STATE_WON = 2
 STATE_GAME_OVER = 3
-SPEED = 40
+SPEED = 20
 
 PADDLE_SPEED = SPEED/4
 MIN_PADDLE_STEP = 1
@@ -65,9 +65,9 @@ class Bricka:
 
         self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 0, 2] )
         self.paddle_movement_semi_lo = fuzz.trimf(self.paddle_movement, [0, 2, 4] )
-        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [2, 4, 6] )
-        self.paddle_movement_semi_high = fuzz.trimf(self.paddle_movement, [4, 7, 10] )
-        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [7, MAX_PADDLE_MOVEMENT, MAX_PADDLE_MOVEMENT] )
+        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [2, 8, 14] )
+        self.paddle_movement_semi_high = fuzz.trimf(self.paddle_movement, [8, 20, 32] )
+        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [20, MAX_PADDLE_MOVEMENT, MAX_PADDLE_MOVEMENT] )
 
 
         if pygame.font:
@@ -255,7 +255,7 @@ class Bricka:
                     self.paddle.left += MIN_PADDLE_STEP * PADDLE_SPEED
 
 
-            self.clock.tick(10)
+            self.clock.tick(100)
             self.screen.fill(BLACK)
             self.check_input()
 
