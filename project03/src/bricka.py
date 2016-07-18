@@ -39,7 +39,7 @@ STATE_BALL_IN_PADDLE = 0
 STATE_PLAYING = 1
 STATE_WON = 2
 STATE_GAME_OVER = 3
-SPEED = 20
+SPEED = 10
 
 PADDLE_SPEED = SPEED/4
 MIN_PADDLE_STEP = 1
@@ -54,7 +54,7 @@ class Bricka:
         
         self.clock = pygame.time.Clock()
 
-        MAX_PADDLE_MOVEMENT = 300
+        MAX_PADDLE_MOVEMENT = 100
         
         # generate universe variables
         # 1. x distance from paddle to ball
@@ -74,12 +74,30 @@ class Bricka:
         # high: from 10 to SCREEN_SIZE[0], and when self.x_distance_to_ball=SCREEN_SIZE[0], highest
         self.dist_to_ball_hi = fuzz.trimf(self.x_distance_to_ball, [3*window_width/4, window_width, window_width] )
 
+        fig, (ax0) = plt.subplots(nrows=1, figsize=(8, 3))
+        ax0.plot(self.x_distance_to_ball, self.dist_to_ball_lo, 'b', linewidth=1.5, label='low')
+        ax0.plot(self.x_distance_to_ball, self.dist_to_ball_semi_lo, 'g', linewidth=1.5, label='semi low')
+        ax0.plot(self.x_distance_to_ball, self.dist_to_ball_md, 'r', linewidth=1.5, label='medium')
+        ax0.plot(self.x_distance_to_ball, self.dist_to_ball_semi_hi, 'yellow', linewidth=1.5, label='semi high')
+        ax0.plot(self.x_distance_to_ball, self.dist_to_ball_hi, 'brown', linewidth=1.5, label='high')
+        ax0.set_title('distance from paddle to intersection point')
+        ax0.legend()
+        # Turn off top/right axes
+        ax0.spines['top'].set_visible(False)
+        ax0.spines['right'].set_visible(False)
+        ax0.get_xaxis().tick_bottom()
+        ax0.get_yaxis().tick_left()
+        ax0.set_xlim(0, window_width)
+        plt.tight_layout()
+        plt.show()
+
+
         # paddle movement control with distance of movement unit
-        self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, 20, 40] )
+        self.paddle_movement_lo = fuzz.trimf(self.paddle_movement, [0, window_width/40, window_width/30] )
 #self.paddle_movement_semi_lo = fuzz.trimf(self.paddle_movement, [0, 2, 4] )
-        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [20, 40, 60] )
+        self.paddle_movement_md = fuzz.trimf(self.paddle_movement, [window_width/40, window_width/20, window_width/10])
 #       self.paddle_movement_semi_high = fuzz.trimf(self.paddle_movement, [8, 20, 32] )
-        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [40, MAX_PADDLE_MOVEMENT, MAX_PADDLE_MOVEMENT] )
+        self.paddle_movement_hi = fuzz.trimf(self.paddle_movement, [window_width/20, MAX_PADDLE_MOVEMENT, MAX_PADDLE_MOVEMENT])
 
 
         if pygame.font:
@@ -251,6 +269,9 @@ class Bricka:
                 activation_lo = np.fmin(self.paddle_movement_lo, rule1)
                 activation_md = np.fmin(self.paddle_movement_md, x_level_md)
                 activation_hi = np.fmin(self.paddle_movement_hi, rule2)
+                #print activation_lo
+                #print activation_md
+                #print activation_hi
                 # activation_lo = np.fmin(x_level_lo, active_rule1)
                 # activation_hi = np.fmin(x_level_hi, active_rule3)
                 # activate paddle movement medium
@@ -263,20 +284,21 @@ class Bricka:
                 PADDLE_SPEED = speed
 
                 # --- UNCOMMENT TO VISULIZE RULES and how they fire -----
+                '''
+                fig, ax0 = plt.subplots(figsize=(8, 8))
+                tip0 = np.zeros_like(self.paddle_movement)
+                ax0.fill_between(self.paddle_movement, tip0, activation_lo, facecolor='b', alpha=0.7)
+                ax0.plot(self.paddle_movement, self.paddle_movement_lo, 'b', linewidth=0.5, linestyle='--', )
+                ax0.fill_between(self.paddle_movement, tip0, activation_md, facecolor='g', alpha=0.7)
+                ax0.plot(self.paddle_movement, self.paddle_movement_md, 'g', linewidth=0.5, linestyle='--')
+                ax0.fill_between(self.paddle_movement, tip0, activation_hi, facecolor='r', alpha=0.7)
+                ax0.plot(self.paddle_movement, self.paddle_movement_hi, 'r', linewidth=0.5, linestyle='--')
+                ax0.plot([speed, speed], [0, 1], 'k', linewidth=1.5, alpha=0.9)
+                ax0.set_title('Output membership activity')
 
-                # fig, ax0 = plt.subplots(figsize=(8, 3))
-                # tip0 = np.zeros_like(self.paddle_movement)
-                # ax0.fill_between(self.paddle_movement, tip0, activation_lo, facecolor='b', alpha=0.7)
-                # ax0.plot(self.paddle_movement, active_rule1, 'b', linewidth=0.5, linestyle='--', )
-                # ax0.fill_between(self.paddle_movement, tip0, activation_md, facecolor='g', alpha=0.7)
-                # ax0.plot(self.paddle_movement, self.paddle_movement_md, 'g', linewidth=0.5, linestyle='--')
-                # ax0.fill_between(self.paddle_movement, tip0, activation_hi, facecolor='r', alpha=0.7)
-                # ax0.plot(self.paddle_movement, active_rule3, 'r', linewidth=0.5, linestyle='--')
-                # ax0.plot([speed, speed], [0, 1], 'k', linewidth=1.5, alpha=0.9)
-                # ax0.set_title('Output membership activity')
-
-                # plt.tight_layout()
-                # plt.show()
+                plt.tight_layout()
+                plt.show()
+                '''
 
                 if intersection_point + BALL_RADIUS - (self.paddle.left + PADDLE_WIDTH / 2) < 0:
                     self.paddle.left -= MIN_PADDLE_STEP * PADDLE_SPEED
